@@ -37,18 +37,13 @@ h1{font:700 1.65rem/1.1 var(--display);margin:0;letter-spacing:.01em}
 .conn{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 button,select{font:inherit;color:inherit}
 button{min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:var(--sheet);cursor:pointer}
-button:focus-visible,.key:focus-visible,.lesson:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+button:focus-visible,.key:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
 button.primary{background:var(--brass);color:var(--on-brass);border-color:var(--brass);font-weight:700}
 .pill{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 10px;font-size:.875rem;border-radius:99px;border:1px solid var(--line)}
 .pill::before{content:"";width:9px;height:9px;border-radius:50%;border:2px solid var(--muted)}
 .pill.on{border-color:var(--good);color:var(--good)}
 .pill.on::before{background:var(--good);border-color:var(--good)}
 .hint{margin:0;padding:10px 12px;border-left:3px solid var(--warn);background:var(--sheet);font-size:.9375rem}
-.lessons{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
-.lesson{flex:0 0 auto;min-height:48px;padding:5px 12px;text-align:left;display:grid;line-height:1.2}
-.lesson b{font-weight:700;font-size:.9375rem}
-.lesson small{color:var(--muted);font-size:.75rem;font-variant-numeric:tabular-nums}
-.lesson[aria-pressed="true"]{border-color:var(--brass);box-shadow:inset 0 -3px 0 var(--brass)}
 .topbar,.footbar{display:grid;gap:12px;min-width:0}
 .score{--sh:clamp(128px,23vh,172px);background:var(--sheet);border:1px solid var(--line);border-radius:6px;overflow-x:auto;scrollbar-width:thin}
 .score svg{display:block;height:calc(var(--sh)*var(--zoom)*var(--k,1))}
@@ -125,8 +120,7 @@ html[data-view="keys"] .kb{height:clamp(170px,46vh,340px)}
 @media (max-width:460px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-height:480px) and (orientation:landscape){
   body{padding-block:6px 12px}.app{gap:8px;max-width:none}h1{font-size:1.2rem}
-  button{min-height:36px}.pill{min-height:28px}.conn{flex-wrap:nowrap}
-  .lessons{padding-bottom:0}.lesson{min-height:36px;padding-block:2px}.lesson small{display:none}
+  button{min-height:36px}.pill{min-height:28px}
   .score{--sh:96px}.kb{height:clamp(96px,30vh,150px)}
   .say{min-height:0;flex-direction:row;align-items:baseline;flex-wrap:wrap;justify-content:flex-start;gap:0 10px}.say strong{font-size:1.05rem}.say span{font-size:.8125rem}
 }
@@ -161,6 +155,9 @@ button.recording{background:var(--bad);border-color:var(--bad);color:var(--sheet
 .prop{background:var(--sheet);border:1px solid var(--line);border-radius:6px;margin-top:8px;padding-top:8px}
 .prop>b,.prop>p{display:block;padding:0 12px}
 .prop>p{margin-bottom:8px}
+.head-acts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.merge-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:var(--brass-soft);border-radius:6px}
+.merge-bar button{min-height:36px}
 .quicks{display:flex;flex-wrap:wrap;gap:6px}
 .quicks button{min-height:36px;padding:0 10px;font-size:.875rem}
 .chat-form{display:flex;gap:8px;align-items:flex-end}
@@ -207,9 +204,10 @@ html.fs .stats dd{font-size:1.125rem}
     <div class="conn">
       <span class="pill" id="status" role="status">Piano nicht verbunden</span>
       <button class="primary" id="btnBle" type="button">Bluetooth verbinden</button>
+      <button id="btnFull" type="button">Vollbild</button>
+      <button id="btnSettings" type="button">Einstellungen</button>
     </div>
   </header>
-  <nav class="lessons" id="lessons" aria-label="Übungen"></nav>
   </div>
   <p class="hint" id="hint" hidden></p>
   <div class="score" id="score"></div>
@@ -218,13 +216,13 @@ html.fs .stats dd{font-size:1.125rem}
   <div class="footbar" id="footbar">
   <div class="bar">
     <div class="tools">
-      <button id="btnDemo" type="button">Vorspielen</button>
+      <button id="btnPrev" type="button" aria-label="Eine Note zurück">‹ Zurück</button>
+      <button class="primary" id="btnDemo" type="button">Play</button>
+      <button id="btnFwd" type="button" aria-label="Eine Note vor">Vor ›</button>
       <button id="btnReset" type="button">Von vorn</button>
       <button id="btnRec" type="button">Aufnehmen</button>
       <button id="btnLib" type="button">Bibliothek</button>
       <button id="btnChat" type="button">Fragen</button>
-      <button id="btnFull" type="button">Vollbild</button>
-      <button id="btnSettings" type="button">Einstellungen</button>
     </div>
     <div class="live"><span id="played">Gespielt: –</span><span>Anschlag</span><div class="vel"><i id="vel"></i></div><span class="ped" id="ped">Pedal</span></div>
   </div>
@@ -288,7 +286,7 @@ html.fs .stats dd{font-size:1.125rem}
     </section>
     <section>
       <h3>Sicherung</h3>
-      <p>Die Sicherung enthält Aufnahmen, Tastenfolgen und Einstellungen. Der API-Schlüssel gehört nicht dazu. Beim Laden kommen die Aufnahmen zu den vorhandenen dazu, die Einstellungen werden ersetzt.</p>
+      <p>Die Sicherung enthält Aufnahmen, Gespräche, Tastenfolgen und Einstellungen. Der API-Schlüssel gehört nicht dazu. Beim Laden kommen die Aufnahmen zu den vorhandenen dazu, die Einstellungen werden ersetzt.</p>
       <div class="key-row">
         <button id="btnBackup" type="button">Sicherung speichern</button>
         <label class="file-btn" for="optRestore">Sicherung laden<input id="optRestore" type="file" accept=".json,application/json"></label>
@@ -300,7 +298,7 @@ html.fs .stats dd{font-size:1.125rem}
 
 <div class="panel" id="chat" role="dialog" aria-modal="true" aria-labelledby="chatTitle" hidden>
   <div class="panel-in">
-    <div class="panel-head"><h2 id="chatTitle">Fragen</h2><button class="primary" id="btnChatClose" type="button">Schliessen</button></div>
+    <div class="panel-head"><h2 id="chatTitle">Fragen</h2><div class="head-acts"><button id="btnChatNew" type="button">Neues Gespräch</button><button class="primary" id="btnChatClose" type="button">Schliessen</button></div></div>
     <p id="chatPiece"></p>
     <div class="hint" id="chatNoKey" hidden>Trage zuerst deinen API-Schlüssel ein. <button id="btnChatKey" type="button">Zu den Einstellungen</button></div>
     <div class="chat-log" id="chatLog"></div>
@@ -319,6 +317,7 @@ html.fs .stats dd{font-size:1.125rem}
 <div class="panel wide" id="lib" role="dialog" aria-modal="true" aria-labelledby="libTitle" hidden>
   <div class="panel-in">
     <div class="panel-head"><h2 id="libTitle">Bibliothek</h2><button class="primary" id="btnLibClose" type="button">Schliessen</button></div>
+    <div class="merge-bar" id="mergeBar" hidden><span id="mergeText"></span><button id="btnMergeCancel" type="button">Abbrechen</button></div>
     <p class="lib-search" id="libSearch" aria-live="polite"></p>
     <div class="lib-cmds" id="libCmds"></div>
     <div class="lib-lists">
@@ -395,7 +394,7 @@ function saveBest(){try{localStorage.setItem('tastenweg-best',JSON.stringify(bes
 /* ---------- Elemente ---------- */
 function $(id){return document.getElementById(id);}
 var scoreEl=$('score'),kbEl=$('kb'),sayEl=$('say'),hintEl=$('hint'),statusEl=$('status');
-var lesson=LESSONS[0],pos=0,wrong=[],times=[],done=false,keys={},noteEls=[],noteXs=[],playX=0,grand=null;
+var lesson=LESSONS[0],pos=0,wrong=[],times=[],done=false,keys={},noteEls=[],noteXs=[],playX=0,grand=null,recSteps=[],stepEls=[],got=[],gotAt=0,navigated=false;
 function isRec(){return lesson.kind==='rec';}
 function pieceNotes(){return isRec()?lesson.rec.notes.map(function(o){return o.n;}):lesson.notes.map(function(o){return o.midi;});}
 var showNames=true,showKeys=true;
@@ -407,7 +406,7 @@ function hint(text){hintEl.hidden=!text;hintEl.textContent=text||'';}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function buildScore(){
   if(isRec()){buildGrand();return;}
-  grand=null;
+  grand=null;recSteps=[];stepEls=[];
   var bass=lesson.clef==='bass',bottom=80,base=bass?18:30;
   function dia(n){var oct=Math.floor(n/12)-1,st=SEMI.indexOf(n%12);return oct*7+st;}
   var x=86,xs=[],acc=0,bars=[];
@@ -441,13 +440,18 @@ function buildScore(){
   scoreEl.innerHTML='<svg viewBox="0 0 '+w+' 120" style="aspect-ratio:'+w+'/120;width:auto;max-width:none" role="img" aria-label="Noten der Übung '+lesson.title+'">'+h+'</svg>';
   noteEls=[].slice.call(scoreEl.querySelectorAll('.n'));noteXs=xs;
 }
+function stepGroups(){return isRec()?stepEls:noteEls.map(function(e){return [e];});}
 function paintNotes(){
-  noteEls.forEach(function(el,i){
+  stepGroups().forEach(function(els,i){
     var c='n';
-    if(i<pos)c+=wrong[i]?' miss':' ok';
+    if(i<pos)c+=times[i]===undefined?'':(wrong[i]?' miss':' ok');
     else if(i===pos&&!done)c+=wrong[i]?' cur miss':' cur';
-    el.setAttribute('class',c+(el.dataset.late?' late':''));
+    els.forEach(function(el){el.setAttribute('class',c+(el.dataset.late?' late':''));});
   });
+  if(isRec()&&grand&&!demoTimers.length&&recSteps.length){
+    playX=grand.x(recSteps[Math.min(pos,recSteps.length-1)].q)-9;
+    var ph=$('ph');if(ph){ph.setAttribute('x1',playX);ph.setAttribute('x2',playX);}
+  }
   var x=isRec()?playX:(noteXs[Math.min(pos,noteXs.length-1)]||0),svg=scoreEl.querySelector('svg');
   if(svg){var f=svg.getBoundingClientRect().width/svg.viewBox.baseVal.width;scoreEl.scrollLeft=Math.max(0,x*f-scoreEl.clientWidth*0.35);}
 }
@@ -468,9 +472,14 @@ function buildKeys(){
 }
 function paintNext(){
   Object.keys(keys).forEach(function(k){keys[k].classList.remove('next');});
-  if(!done&&showKeys&&lesson.notes[pos]){var k=keys[lesson.notes[pos].midi];if(k)k.classList.add('next');}
+  if(done||!showKeys)return;
+  if(isRec()){if(recSteps[pos])recSteps[pos].midis.forEach(function(n){if(got.indexOf(n)<0&&keys[n])keys[n].classList.add('next');});return;}
+  if(lesson.notes[pos]){var k=keys[lesson.notes[pos].midi];if(k)k.classList.add('next');}
 }
+function handsOf(ms){var r=ms.some(function(n){return n>=60;}),l=ms.some(function(n){return n<60;});return r&&l?'Beide Hände':r?'Rechte Hand':'Linke Hand';}
+function chordName(ms){return ms.slice().reverse().map(shortName).join(' + ');}
 function promptNext(){
+  if(isRec()){var st=recSteps[pos];if(st)say('','Nächste '+(st.midis.length>1?'Töne: ':'Note: ')+chordName(st.midis),handsOf(st.midis));return;}
   var no=lesson.notes[pos];
   say('', 'Nächste Note: '+shortName(no.midi), 'Finger '+no.finger+' · '+lesson.hand);
 }
@@ -478,17 +487,33 @@ function promptNext(){
 /* ---------- Ablauf ---------- */
 function load(l){
   if(recState)stopRecord();
-  stopDemo();lesson=l;playX=0;buildScore();buildKeys();reset();drawLessons();
+  stopDemo();lesson=l;playX=0;buildScore();buildKeys();reset();
 }
 function reset(){
-  stopDemo();recent=[];pos=0;done=false;wrong=lesson.notes.map(function(){return 0;});times=[];
-  noteEls.forEach(function(el){delete el.dataset.late;});
+  stopDemo();recent=[];pos=0;done=false;got=[];navigated=false;wrong=(isRec()?recSteps:lesson.notes).map(function(){return 0;});times=[];
+  stepGroups().forEach(function(els){els.forEach(function(el){delete el.dataset.late;});});
   paintNotes();paintNext();
-  if(isRec()){done=true;moveHead(0);say('',lesson.title,'Eigene Aufnahme. Vorspielen spielt sie ab.');return;}
+  if(isRec()){if(!recSteps.length){done=true;say('',lesson.title,'Dieses Stück enthält keine Noten.');return;}say('',lesson.title+': Beginne mit '+chordName(recSteps[0].midis),handsOf(recSteps[0].midis)+'. Die Noten laufen mit, sobald du spielst.');return;}
   say('',lesson.title+': Beginne mit '+shortName(lesson.notes[0].midi),lesson.tip);
+}
+function pressChord(n){
+  var st=recSteps[pos];
+  if(st.midis.indexOf(n)>=0){
+    if(got.indexOf(n)<0){if(!got.length)gotAt=performance.now();got.push(n);}
+    if(got.length===st.midis.length){
+      times[pos]=gotAt;got=[];pos++;
+      if(pos>=recSteps.length){finish();return;}
+      promptNext();sayEl.classList.add('right');
+    }
+  }else{
+    wrong[pos]++;
+    say('wrong','Das war '+shortName(n)+'. Gesucht: '+chordName(st.midis)+'.',handsOf(st.midis));
+  }
+  paintNotes();paintNext();
 }
 function press(n){
   if(done)return;
+  if(isRec()){pressChord(n);return;}
   var want=lesson.notes[pos];
   if(n===want.midi){
     times[pos]=performance.now();pos++;
@@ -503,8 +528,18 @@ function press(n){
 }
 function finish(){
   done=true;
-  var r=scoreRun(lesson.notes.map(function(o){return o.beats;}),times,wrong);
-  r.uneven.forEach(function(i){noteEls[i].dataset.late='1';});
+  if(navigated){
+    paintNotes();paintNext();
+    var total=stepCount(),played=0,clean=0,bad=0;
+    for(var i=0;i<total;i++){if(times[i]!==undefined){played++;if(!wrong[i])clean++;bad+=wrong[i];}}
+    $('rHits').textContent=clean+' / '+played;$('rWrong').textContent=bad;$('rEven').textContent='–';$('rBpm').textContent='–';
+    $('rNote').textContent='Gleichmass und Tempo gibt es nur für einen Durchgang ohne Sprünge. Von vorn startet einen solchen.';
+    say('right','Ende des Stücks',clean+' von '+played+' gespielten Noten sofort richtig.');
+    return;
+  }
+  var r=scoreRun(isRec()?recSteps.map(function(o){return o.beats;}):lesson.notes.map(function(o){return o.beats;}),times,wrong);
+  var groups=stepGroups();
+  r.uneven.forEach(function(i){groups[i].forEach(function(el){el.dataset.late='1';});});
   paintNotes();paintNext();
   $('rHits').textContent=r.first+' / '+r.count;
   $('rWrong').textContent=r.wrong;
@@ -515,18 +550,7 @@ function finish(){
   var next=r.wrong===0&&r.evenPct>=80;
   $('rNote').textContent=next?'Das sitzt. Du kannst zur nächsten Übung wechseln.':(r.wrong?'Übe die roten Stellen einzeln und spiele sie dann im Zusammenhang.':'Die Töne stimmen. Spiele jetzt langsamer und zähle die Schläge mit.');
   say('right',lesson.title+' geschafft',r.first+' von '+r.count+' Noten sofort richtig. „Von vorn“ startet die Übung neu.');
-  drawLessons();
 }
-function drawLessons(){
-  var el=$('lessons');el.textContent='';
-  LESSONS.forEach(function(l){
-    var b=document.createElement('button'),t=document.createElement('b'),s=document.createElement('small');
-    b.type='button';b.id='lesson-'+l.id;b.className='lesson';b.setAttribute('aria-pressed',l===lesson?'true':'false');
-    t.textContent=l.title;s.textContent=l.hand+(best[l.id]?' · bisher '+best[l.id]+' %':'');
-    b.appendChild(t);b.appendChild(s);b.addEventListener('click',function(){load(l);});el.appendChild(b);
-  });
-}
-
 /* ---------- Eingang vom Piano ---------- */
 var sounding={};
 function noteOn(n,vel,fromScreen){
@@ -627,26 +651,55 @@ function stopDemo(){
   if(demoOff){demoOff();demoOff=null;}
   if(soloBtn){soloBtn.textContent='Anhören';soloBtn=null;}
   Object.keys(keys).forEach(function(k){keys[k].classList.remove('down');});
-  $('btnDemo').textContent='Vorspielen';
+  $('btnDemo').textContent='Play';
+}
+function stepCount(){return isRec()?recSteps.length:lesson.notes.length;}
+function stepTimes(){
+  if(isRec())return recSteps.map(function(st){return st.q*grand.u+grand.shift;});
+  var beat=60000/lesson.tempo,at=0;
+  return lesson.notes.map(function(o){var t=at*beat;at+=o.beats;return t;});
+}
+function stepAt(t){
+  var list=stepTimes(),i=0;
+  while(i+1<list.length&&list[i+1]<=t+30)i++;
+  return i;
+}
+function followPlay(t){
+  var i=stepAt(t);
+  if(i!==pos){pos=i;got=[];}
+  if(isRec())moveHead(t);else paintNotes();
+  paintNext();
+}
+function clearLate(){stepGroups().forEach(function(els){els.forEach(function(el){delete el.dataset.late;});});}
+function startPlay(){
+  navigated=true;
+  $('btnDemo').textContent='Pause';
+  playRec(pieceAsRec(),false,stepTimes()[pos]||0);
 }
 function demo(){
-  if(demoTimers.length){stopDemo();return;}
-  reset();$('btnDemo').textContent='Anhalten';
-  if(isRec()){playRec();return;}
-  var beat=60000/lesson.tempo,t=200;
-  lesson.notes.forEach(function(no,i){
-    var dur=no.beats*beat;
-    demoTimers.push(setTimeout(function(){
-      var k=keys[no.midi],stop=null;
-      if(k)k.classList.add('down');
-      pos=i;paintNotes();paintNext();
-      if(outConnected())sendOut([0x90,no.midi,72]);else stop=tone(no.midi,72);
-      demoOff=function(){if(outConnected())sendOut([0x80,no.midi,0]);if(stop)stop();if(k)k.classList.remove('down');};
-    },t));
-    demoTimers.push(setTimeout(function(){if(demoOff){demoOff();demoOff=null;}},t+dur*0.9));
-    t+=dur;
-  });
-  demoTimers.push(setTimeout(function(){demoTimers=[];reset();},t+150));
+  if(demoTimers.length){stopDemo();paintNotes();paintNext();if(!done)promptNext();return;}
+  if(!stepCount())return;
+  if(done)reset();
+  startPlay();
+}
+function navigate(delta){
+  var count=stepCount();
+  if(!count||recState)return;
+  var playing=demoTimers.length>0;
+  stopDemo();
+  var from=done?count:pos,to=Math.max(0,Math.min(count-1,from+delta));
+  if(to===pos&&!done)return playing?startPlay():undefined;
+  done=false;got=[];navigated=true;pos=to;clearLate();
+  for(var i=pos;i<count;i++){wrong[i]=0;delete times[i];}
+  if(playing)startPlay();
+  else{paintNotes();paintNext();promptNext();}
+}
+function holdButton(el,fn){
+  var wait=null,loop=null;
+  function stop(){clearTimeout(wait);clearInterval(loop);}
+  el.addEventListener('pointerdown',function(e){e.preventDefault();fn();wait=setTimeout(function(){loop=setInterval(fn,170);},420);});
+  ['pointerup','pointercancel','pointerleave'].forEach(function(ev){el.addEventListener(ev,stop);});
+  el.addEventListener('click',function(e){if(e.detail===0)fn();});
 }
 
 /* ---------- Bedienung ---------- */
@@ -662,9 +715,12 @@ kbEl.addEventListener('pointerup',up);kbEl.addEventListener('pointercancel',up);
 $('btnBle').addEventListener('click',connectBle);
 $('btnReset').addEventListener('click',reset);
 $('btnDemo').addEventListener('click',demo);
+holdButton($('btnPrev'),function(){navigate(-1);});
+holdButton($('btnFwd'),function(){navigate(1);});
 $('btnRec').addEventListener('click',function(){toggleRecord();});
 $('btnLib').addEventListener('click',openLib);
 $('btnLibClose').addEventListener('click',closeLib);
+$('btnMergeCancel').addEventListener('click',function(){mergeFrom=null;renderLib();});
 var btnFull=$('btnFull'),rootEl=document.documentElement;
 if(!rootEl.requestFullscreen)btnFull.hidden=true;
 function toggleFull(fromPiano){
@@ -737,7 +793,7 @@ viewBtns.forEach(function(b){b.addEventListener('click',function(){prefs.view=b.
 $('optZoom').addEventListener('input',function(e){prefs.zoom=+e.target.value;savePrefs();applyPrefs();});
 $('optBpm').addEventListener('input',function(e){prefs.bpm=+e.target.value;savePrefs();applyPrefs();});
 $('optMeter').addEventListener('change',function(e){prefs.meter=+e.target.value;savePrefs();});
-$('optGrid').addEventListener('change',function(e){prefs.grid=+e.target.value;savePrefs();if(isRec()){buildScore();paintNotes();}});
+$('optGrid').addEventListener('change',function(e){prefs.grid=+e.target.value;savePrefs();if(isRec()){buildScore();reset();}});
 window.addEventListener('resize',paintNotes);
 
 /* Einstellungen */
@@ -749,8 +805,8 @@ $('btnClose').addEventListener('click',closeSettings);
 document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(settingsOpen)closeSettings();else if(libOpen)closeLib();else if(chatOpen)closeChat();});
 
 /* Tonfolgen */
-var GLOBAL=['demo','reset','record','library','full'],MENU=['next','confirm','back'];
-var ACTIONS=[{id:'demo',label:'Vorspielen'},{id:'reset',label:'Von vorn'},{id:'record',label:'Aufnahme starten und stoppen'},{id:'library',label:'Bibliothek öffnen'},{id:'full',label:'Vollbild ein/aus'},
+var GLOBAL=['demo','prev','fwd','reset','record','library','full'],MENU=['next','confirm','back'];
+var ACTIONS=[{id:'demo',label:'Play und Pause'},{id:'prev',label:'Eine Note zurück'},{id:'fwd',label:'Eine Note vor'},{id:'reset',label:'Von vorn'},{id:'record',label:'Aufnahme starten und stoppen'},{id:'library',label:'Bibliothek öffnen'},{id:'full',label:'Vollbild ein/aus'},
  {id:'next',label:'Weiter'},{id:'confirm',label:'Bestätigen'},{id:'back',label:'Schliessen / Zurück'}];
 var PEDALS={1064:'Rechtes Pedal',1066:'Mittelpedal',1067:'Linkes Pedal'};
 var SEQ_GAP=1500,SEQ_MAX=6,recent=[],rec=null,seqMsg={};
@@ -846,7 +902,9 @@ function trackInput(tok,wrongAt){
   runAction(hit.id,hit.tail[0].t);
 }
 function runAction(id,start){
-  if(id==='demo'){if(demoStopAt<start)demo();}
+  if(id==='demo'){if(demoStopAt<start-20)demo();else{paintNotes();paintNext();}}
+  else if(id==='prev')navigate(-1);
+  else if(id==='fwd')navigate(1);
   else if(id==='reset')reset();
   else if(id==='library')openLib();
   else if(id==='record')toggleRecord(start);
@@ -854,22 +912,44 @@ function runAction(id,start){
 }
 
 /* ---------- Bibliothek ---------- */
-var libOpen=false,libEl=$('lib'),query=[],selId=null,libLast=0,renaming=null,confirmDel=null;
+var libOpen=false,libEl=$('lib'),query=[],selId=null,libLast=0,renaming=null,confirmDel=null,mergeFrom=null;
 function pieceId(){return isRec()?'r'+lesson.rec.id:'l'+lesson.id;}
 function entries(){
-  var ex=LESSONS.map(function(l){var lead=l.notes.map(function(o){return o.midi;});return {id:'l'+l.id,kind:'ex',title:l.title,sub:l.hand,lead:lead,piece:l};});
-  var rs=recordings.map(function(r){return {id:'r'+r.id,kind:'rec',title:r.title,sub:new Date(r.created).toLocaleDateString('de-CH')+' · '+r.bpm+' BPM',lead:leadNotes(r),rec:r};});
+  var ex=LESSONS.map(function(l){var lead=l.notes.map(function(o){return o.midi;});return {id:'l'+l.id,kind:'ex',title:l.title,sub:l.hand+(best[l.id]?' · bisher '+best[l.id]+' %':''),lead:lead,piece:l};});
+  var rs=recordings.map(function(r){return {id:'r'+r.id,kind:'rec',title:r.title,sub:new Date(r.created).toLocaleDateString('de-CH')+' · '+r.bpm+' BPM'+(best['r'+r.id]?' · bisher '+best['r'+r.id]+' %':''),lead:leadNotes(r),rec:r};});
   return ex.concat(rs);
 }
 function hits(){return entries().filter(function(e){return sameSeq(e.lead.slice(0,query.length),query);});}
-function openPiece(e){closeLib();if(e.kind==='ex')load(e.piece);else openRec(e.rec);}
+function openPiece(e){
+  if(mergeFrom){mergeWith(e.kind==='ex'?lessonAsRec(e.piece):e.rec);return;}
+  closeLib();if(e.kind==='ex')load(e.piece);else openRec(e.rec);
+}
+function plainCopy(r,title){
+  var now=Date.now();
+  return {id:now,title:title,created:now,bpm:r.bpm,meter:r.meter||4,notes:JSON.parse(JSON.stringify(r.notes)),pedal:JSON.parse(JSON.stringify(r.pedal||[]))};
+}
+function duplicateRec(r){
+  var c=plainCopy(r,r.title+' Kopie');putRecording(c);selId='r'+c.id;renderLib();
+}
+function mergeRecs(a,b){
+  var Ta=transcribe(a,prefs.grid),Tb=transcribe(b,prefs.grid),beat=60000/a.bpm,scale=b.bpm/a.bpm,offset=Ta.bars*Ta.per*beat;
+  function shift(t){return Math.round((t-Tb.shift)*scale+offset);}
+  var c=plainCopy(a,a.title+' + '+b.title);
+  c.notes=c.notes.concat(b.notes.map(function(o){return {n:o.n,v:o.v,t:shift(o.t),d:Math.round(o.d*scale)};}));
+  c.pedal=c.pedal.concat((b.pedal||[]).map(function(p){return {t:shift(p.t),v:p.v};}));
+  return c;
+}
+function mergeWith(b){
+  var a=mergeFrom,c=mergeRecs(a,b);mergeFrom=null;
+  putRecording(c);query=[];selId='r'+c.id;renderLib();
+}
 function openLib(){
   if(recState)return;
   if(settingsOpen)closeSettings();
-  stopDemo();hideBars();query=[];libLast=0;recent=[];renaming=null;confirmDel=null;selId=pieceId();
+  stopDemo();hideBars();query=[];libLast=0;recent=[];renaming=null;confirmDel=null;mergeFrom=null;selId=pieceId();
   libOpen=true;libEl.hidden=false;renderLib();$('btnLibClose').focus();
 }
-function closeLib(){libOpen=false;libEl.hidden=true;recent=[];paintNotes();}
+function closeLib(){mergeFrom=null;libOpen=false;libEl.hidden=true;recent=[];paintNotes();}
 function libInput(tok){
   var note=tok<1000,now=performance.now();
   if(note){if(now-libLast>2000)query=[];libLast=now;query.push(tok);}
@@ -910,6 +990,8 @@ function libItem(e){
     btn('Speichern',function(){var v=inp.value.trim();if(v){e.rec.title=v;putRecording(e.rec);if(isRec()&&lesson.rec.id===e.rec.id)lesson.title=v;}renaming=null;renderLib();});
   }else{
     btn('Umbenennen',function(){renaming=e.rec.id;confirmDel=null;renderLib();});
+    btn('Duplizieren',function(){duplicateRec(e.rec);});
+    btn('Zusammenführen',function(){mergeFrom=e.rec;confirmDel=null;renaming=null;renderLib();});
     if(!window.claude)btn('MIDI speichern',function(){saveMidi(e.rec);});
     if(confirmDel===e.rec.id)btn('Wirklich löschen',function(){confirmDel=null;removeRecording(e.rec);},'danger');
     else btn('Löschen',function(){confirmDel=e.rec.id;renaming=null;renderLib();});
@@ -920,6 +1002,8 @@ function libItem(e){
 function renderLib(){
   var h=hits(),ids=h.map(function(e){return e.id;});
   if(h.length&&ids.indexOf(selId)<0)selId=h[0].id;
+  $('mergeBar').hidden=!mergeFrom;
+  if(mergeFrom)$('mergeText').textContent='Tippe auf das Stück, das nach «'+mergeFrom.title+'» folgen soll. Beide bleiben erhalten, das Ergebnis ist ein neues Stück.';
   $('libSearch').textContent=query.length?'Suche: '+query.map(noteName).join(' – '):'Spiele die ersten Töne eines Stücks';
   var ex=h.filter(function(e){return e.kind==='ex';}),rs=h.filter(function(e){return e.kind==='rec';});
   $('libExHead').textContent='Übungsstücke ('+ex.length+')';
@@ -939,16 +1023,22 @@ function renderLib(){
 }
 
 /* ---------- Speicher für Aufnahmen ---------- */
-var db=null,recordings=[];
+var db=null,recordings=[],chats={};
 function sortRecs(){recordings.sort(function(a,b){return b.created-a.created;});}
 function openDb(){
   try{
-    var r=indexedDB.open('tastenweg',1);
-    r.onupgradeneeded=function(){r.result.createObjectStore('recordings',{keyPath:'id'});};
+    var r=indexedDB.open('tastenweg',2);
+    r.onupgradeneeded=function(){
+      var names=r.result.objectStoreNames;
+      if(!names.contains('recordings'))r.result.createObjectStore('recordings',{keyPath:'id'});
+      if(!names.contains('chats'))r.result.createObjectStore('chats',{keyPath:'key'});
+    };
     r.onsuccess=function(){
       db=r.result;
       var q=db.transaction('recordings').objectStore('recordings').getAll();
       q.onsuccess=function(){recordings=q.result;sortRecs();if(libOpen)renderLib();};
+      var c=db.transaction('chats').objectStore('chats').getAll();
+      c.onsuccess=function(){c.result.forEach(function(d){chats[d.key]=d;});};
     };
   }catch(e){db=null;}
 }
@@ -958,6 +1048,15 @@ function putRecording(x){
   try{db.transaction('recordings','readwrite').objectStore('recordings').put(x);}catch(e){return false;}
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(function(){});
   return true;
+}
+function putChat(doc){
+  chats[doc.key]=doc;
+  if(!db)return;
+  try{db.transaction('chats','readwrite').objectStore('chats').put(JSON.parse(JSON.stringify(doc)));}catch(e){}
+}
+function removeChat(key){
+  delete chats[key];
+  if(db){try{db.transaction('chats','readwrite').objectStore('chats').delete(key);}catch(e){}}
 }
 function removeRecording(x){
   recordings=recordings.filter(function(o){return o.id!==x.id;});
@@ -1032,7 +1131,7 @@ function stopRecord(cut){
     pedal:d.pedal.filter(function(p){return p.at<end;}).map(function(p){return {t:p.t,v:p.v};})};
   var kept=putRecording(r);
   openRec(r);
-  say(kept?'right':'wrong',kept?r.title+' gespeichert':r.title+' ist nicht dauerhaft gespeichert',kept?notes.length+' Töne. Vorspielen spielt sie ab.':'Dieser Browser erlaubt hier keinen Speicher. Die Aufnahme bleibt nur, bis du die Seite schliesst.');
+  say(kept?'right':'wrong',kept?r.title+' gespeichert':r.title+' ist nicht dauerhaft gespeichert',kept?notes.length+' Töne. Spiel die erste Note zum Üben oder tippe auf Play.':'Dieser Browser erlaubt hier keinen Speicher. Die Aufnahme bleibt nur, bis du die Seite schliesst.');
 }
 
 /* ---------- Aufnahme abspielen ---------- */
@@ -1043,9 +1142,9 @@ function moveHead(t){
   var ph=$('ph');if(ph){ph.setAttribute('x1',x);ph.setAttribute('x2',x);}
   paintNotes();
 }
-function playRec(r,solo){
-  r=r||lesson.rec;
-  var all=r.notes,lo=all.reduce(function(m,o){return Math.min(m,o.t);},0),lead=200-lo,sounding={},last=0,seq=0;
+function playRec(r,solo,from){
+  from=from||0;
+  var all=r.notes.filter(function(o){return o.t>=from-25;}),lo=from||r.notes.reduce(function(m,o){return Math.min(m,o.t);},0),lead=200-lo,sounding={},last=0,seq=0;
   function off(key){var s=sounding[key];if(!s)return;delete sounding[key];if(outConnected())sendOut([0x80,s.n,0]);if(s.stop)s.stop();var k=keys[s.n];if(k)k.classList.remove('down');}
   all.forEach(function(o){
     var key=++seq,at=o.t+lead,to=at+o.d;
@@ -1053,13 +1152,13 @@ function playRec(r,solo){
     demoTimers.push(setTimeout(function(){
       var k=keys[o.n],stop=null;
       if(k)k.classList.add('down');
-      if(!solo)moveHead(o.t);
+      if(!solo)followPlay(o.t);
       if(outConnected())sendOut([0x90,o.n,o.v]);else stop=tone(o.n,o.v);
       sounding[key]={n:o.n,stop:stop};
     },at));
     demoTimers.push(setTimeout(function(){off(key);},to));
   });
-  (r.pedal||[]).forEach(function(p){demoTimers.push(setTimeout(function(){if(outConnected())sendOut([0xB0,64,p.v]);},p.t+lead));});
+  (r.pedal||[]).filter(function(p){return p.t>=from;}).forEach(function(p){demoTimers.push(setTimeout(function(){if(outConnected())sendOut([0xB0,64,p.v]);},p.t+lead));});
   demoOff=function(){Object.keys(sounding).forEach(off);if(outConnected())sendOut([0xB0,64,0]);};
   demoTimers.push(setTimeout(function(){if(demoOff){demoOff();demoOff=null;}demoTimers=[];if(solo)stopDemo();else reset();},last+250));
 }
@@ -1112,8 +1211,31 @@ function transcribe(r,grid){
   var ri=items.filter(function(o){return o.n>=60;}),le=items.filter(function(o){return o.n<60;});
   return {items:items,u:u,shift:shift,per:per,barLen:barLen,bars:bars,treble:staffTokens(ri,bars,barLen,g),bass:staffTokens(le,bars,barLen,g)};
 }
+function linkSteps(T){
+  var map={};
+  [T.treble,T.bass].forEach(function(list){
+    var prev=null;
+    list.forEach(function(t){
+      if(t.midis&&!(prev&&prev.tie)){var e=map[t.q]||(map[t.q]={q:t.q,midis:[]});t.midis.forEach(function(n){if(e.midis.indexOf(n)<0)e.midis.push(n);});}
+      prev=t.midis?t:null;
+    });
+  });
+  var steps=Object.keys(map).map(Number).sort(function(a,b){return a-b;}).map(function(q){return map[q];});
+  steps.forEach(function(st,i){st.midis.sort(function(a,b){return a-b;});st.beats=i+1<steps.length?(steps[i+1].q-st.q)/4:1;});
+  var index={};steps.forEach(function(st,i){index[st.q]=i;});
+  [T.treble,T.bass].forEach(function(list){
+    var prev=null;
+    list.forEach(function(t){
+      if(!t.midis){prev=null;return;}
+      t.step=prev&&prev.tie?prev.step:index[t.q];
+      prev=t;
+    });
+  });
+  return steps;
+}
 function buildGrand(){
   var T=transcribe(lesson.rec,prefs.grid),unit=15,left=88,barLen=T.barLen;
+  recSteps=linkSteps(T);
   function x(q){return left+q*unit+Math.floor(q/barLen)*20;}
   var w=x(T.bars*barLen)+6,h='',b1=80,b2=180,minY=30,maxY=190;
   function staff(bottom){var o='';for(var i=0;i<5;i++)o+='<line x1="6" x2="'+(w-8)+'" y1="'+(bottom-i*10)+'" y2="'+(bottom-i*10)+'"/>';return o;}
@@ -1155,7 +1277,8 @@ function buildGrand(){
         var flags=t.len===1?2:(t.len===2||t.len===3)?1:0;
         for(var f=0;f<flags;f++){var fy2=to+(up?f*7:-f*7);var dir=up?1:-1;g+='<path d="M'+sx+' '+fy2+'q2 '+(dir*7)+' 10 '+(dir*15)+'q-7 '+(-dir*7)+' -10 '+(-dir*7)+'z" fill="currentColor"/>';}
       }
-      o+='<g style="color:var(--ink)">'+g+'</g>';
+      if(t.step!==undefined&&(!prev||!prev.tie))g+='<path class="tm" d="M'+(X-13)+' '+(bottom-44)+'q13 -9 26 0" fill="none" stroke="var(--warn)" stroke-width="2"/>';
+      o+='<g class="n" data-s="'+t.step+'">'+g+'</g>';
       prev=t;
     });
     return o;
@@ -1166,6 +1289,7 @@ function buildGrand(){
   var y0=minY-6,H=maxY+6-y0;
   scoreEl.innerHTML='<svg viewBox="0 '+y0+' '+w+' '+H+'" style="aspect-ratio:'+w+'/'+H+';width:auto;max-width:none;--k:'+(H/120).toFixed(3)+'" role="img" aria-label="Noten der Aufnahme '+esc(lesson.title)+'">'+h+'</svg>';
   noteEls=[];noteXs=[];
+  stepEls=recSteps.map(function(st,i){return [].slice.call(scoreEl.querySelectorAll('.n[data-s="'+i+'"]'));});
   grand={u:T.u,shift:T.shift,x:x};
 }
 function restMark(t,X,bottom,barLen){
@@ -1202,12 +1326,12 @@ function saveFile(name,blob){
 }
 
 /* ---------- Sicherung ---------- */
-function backupData(){return {app:'tastenweg',version:1,saved:new Date().toISOString(),prefs:prefs,best:best,recordings:recordings};}
+function backupData(){return {app:'tastenweg',version:1,saved:new Date().toISOString(),prefs:prefs,best:best,recordings:recordings,chats:Object.keys(chats).map(function(k){return chats[k];})};}
 function setBackupMsg(kind,text){var el=$('backupMsg');el.className='msg '+kind;el.textContent=text;}
 function saveBackup(){
   var day=new Date().toISOString().slice(0,10);
   saveFile('tastenweg-sicherung-'+day+'.json',new Blob([JSON.stringify(backupData())],{type:'application/json'}));
-  setBackupMsg('ok','Sicherung erstellt: '+recordings.length+' Aufnahmen und deine Einstellungen. Der API-Schlüssel ist nicht enthalten.');
+  setBackupMsg('ok','Sicherung erstellt: '+recordings.length+' Aufnahmen, Gespräche und Einstellungen. Der API-Schlüssel ist nicht enthalten.');
 }
 function validRecording(r){
   return r&&typeof r.id==='number'&&typeof r.title==='string'&&r.bpm>0&&Array.isArray(r.notes)&&r.notes.every(function(o){return o&&o.n>=0&&o.n<=127&&isFinite(o.t)&&isFinite(o.d);});
@@ -1223,7 +1347,8 @@ function restoreBackup(text){
     if(d.prefs.seq)prefs.seq=d.prefs.seq;
     savePrefs();applyPrefs();
   }
-  if(d.best){best=d.best;saveBest();drawLessons();}
+  if(d.best){best=d.best;saveBest();}
+  if(Array.isArray(d.chats))d.chats.forEach(function(c){if(c&&c.key&&c.base&&Array.isArray(c.log)&&validRecording(c.base))putChat(c);});
   renderSeqs();
   setBackupMsg('ok','Sicherung geladen: '+(recordings.length-before)+' neue Aufnahmen, insgesamt '+recordings.length+'.');
   return good.length;
@@ -1299,12 +1424,12 @@ function askClaude(messages,tool,timeout){
 }
 
 /* ---------- Stück und Vorschläge umwandeln ---------- */
-function pieceAsRec(){
-  if(isRec())return lesson.rec;
-  var beat=60000/lesson.tempo,at=0;
-  return {id:0,title:lesson.title,bpm:lesson.tempo,meter:4,created:Date.now(),pedal:[],notes:lesson.notes.map(function(o){
+function lessonAsRec(l){
+  var beat=60000/l.tempo,at=0;
+  return {id:0,title:l.title,bpm:l.tempo,meter:4,created:Date.now(),pedal:[],notes:l.notes.map(function(o){
     var d=o.beats*beat,n={n:o.midi,v:72,t:Math.round(at*beat),d:Math.round(d*0.92)};at+=o.beats;return n;})};
 }
+function pieceAsRec(){return isRec()?lesson.rec:lessonAsRec(lesson);}
 function describePiece(r){
   var T=transcribe(r,prefs.grid);
   return JSON.stringify({titel:r.title,tempo:r.bpm,takt:T.per+'/4',takte:T.bars,noten:T.items.map(function(o){return [o.n,o.q/4,o.len/4];})});
@@ -1318,33 +1443,35 @@ function proposalNotes(p,beatMs,offsetBeats){
   });
   return out.sort(function(a,b){return a.t-b.t;}).slice(0,400);
 }
-function proposalRec(p,base,index){
-  var T=transcribe(base,prefs.grid),beat=60000/base.bpm,join=p.kind==='fortsetzung',offset=join?T.bars*T.per:0;
-  var added=proposalNotes(p,beat,offset),stamp=Date.now()+index;
-  var solo={id:stamp,title:p.title,bpm:base.bpm,meter:base.meter||4,created:stamp,source:'claude',pedal:[],
-    notes:proposalNotes(p,beat,0)};
-  var whole={id:stamp,title:join?base.title+' + '+p.title:p.title,bpm:base.bpm,meter:base.meter||4,created:stamp,source:'claude',pedal:[],
-    notes:(join?base.notes:[]).concat(added)};
-  return {solo:solo,whole:whole,count:added.length};
+function proposalRecs(p,doc){
+  var base=doc.base,T=transcribe(base,prefs.grid),beat=60000/base.bpm,join=p.kind==='fortsetzung',offset=join?T.bars*T.per:0;
+  function make(id,title,notes){return {id:id,title:title,bpm:base.bpm,meter:base.meter||4,created:id,source:'claude',chatKey:doc.key,pedal:[],notes:notes};}
+  return {join:join,
+    solo:make(p.id+1,p.title,proposalNotes(p,beat,0)),
+    whole:make(p.id,base.title+' + '+p.title,base.notes.concat(proposalNotes(p,beat,offset)))};
 }
 
 /* ---------- Fragen-Fenster ---------- */
-var chatOpen=false,chatEl=$('chat'),chatLog=[],chatBusy=false,chatBase=null;
+var chatOpen=false,chatEl=$('chat'),chatBusy=false,chatDoc=null,chatResetArm=false;
+function chatKeyNow(){return isRec()?(lesson.rec.chatKey||'r'+lesson.rec.id):'l'+lesson.id;}
+function newChat(key){return {key:key,base:JSON.parse(JSON.stringify(pieceAsRec())),log:[]};}
 function openChat(){
   if(recState)return;
   if(settingsOpen)closeSettings();
   stopDemo();hideBars();
-  var r=pieceAsRec(),same=chatBase&&chatBase.title===r.title&&chatBase.notes.length===r.notes.length;
-  if(!same){chatBase=r;chatLog=[];}
-  chatOpen=true;chatEl.hidden=false;
-  $('chatPiece').textContent='Bezug: '+r.title+' · '+r.notes.length+' Töne';
+  var key=chatKeyNow();
+  chatDoc=chats[key]||newChat(key);
+  chatOpen=true;chatEl.hidden=false;chatResetArm=false;
+  var now=pieceAsRec();
+  $('chatPiece').textContent='Ausgangsstück: '+chatDoc.base.title+(now.title!==chatDoc.base.title?' · Geöffnet: '+now.title:'');
   $('chatNoKey').hidden=!!apiKey;
+  $('btnChatNew').textContent='Neues Gespräch';
   renderChat();
 }
 function closeChat(){stopDemo();chatOpen=false;chatEl.hidden=true;paintNotes();}
 function renderChat(){
   var box=$('chatLog');box.textContent='';
-  chatLog.forEach(function(m){
+  chatDoc.log.forEach(function(m){
     var el=document.createElement('div');el.className='turn '+m.who;
     var p=document.createElement('p');p.textContent=m.text;el.appendChild(p);
     (m.proposals||[]).forEach(function(x){el.appendChild(proposalCard(x));});
@@ -1355,43 +1482,49 @@ function renderChat(){
   chatEl.scrollTop=chatEl.scrollHeight;
 }
 function proposalCard(x){
-  var box=document.createElement('div');box.className='prop';
+  var recs=proposalRecs(x,chatDoc),box=document.createElement('div');box.className='prop';
   var t=document.createElement('b');t.textContent=x.title;box.appendChild(t);
   var i=document.createElement('p');i.textContent=x.idea;box.appendChild(i);
   var acts=document.createElement('div');acts.className='item-acts';
   function btn(text,fn){var b=document.createElement('button');b.type='button';b.textContent=text;b.addEventListener('click',function(){fn(b);});acts.appendChild(b);return b;}
+  function saver(label,flag,rec){
+    var b=btn(x[flag]?'Gespeichert':label,function(el){
+      if(x[flag])return;
+      x[flag]=true;var ok=putRecording(rec);putChat(chatDoc);el.textContent=ok?'Gespeichert':'Nur bis zum Schliessen gespeichert';el.disabled=true;
+    });
+    if(x[flag])b.disabled=true;
+  }
   btn('Anhören',function(b){
     if(soloBtn===b){stopDemo();return;}
     stopDemo();soloBtn=b;b.textContent='Anhalten';
-    demoTimers=[];playRec(x.rec.solo,true);
+    playRec(recs.solo,true);
   });
-  btn('Noten öffnen',function(){closeChat();openRec(x.rec.whole);});
-  var s=btn(x.saved?'Gespeichert':'In Bibliothek speichern',function(b){
-    if(x.saved)return;
-    var ok=putRecording(x.rec.whole);x.saved=true;b.textContent=ok?'Gespeichert':'Nur bis zum Schliessen gespeichert';b.disabled=true;
-  });
-  if(x.saved)s.disabled=true;
+  btn('Vorschlag üben',function(){closeChat();openRec(recs.solo);});
+  saver('Vorschlag speichern','savedSolo',recs.solo);
+  if(recs.join){
+    btn('Basis + Vorschlag üben',function(){closeChat();openRec(recs.whole);});
+    saver('Basis + Vorschlag speichern','savedWhole',recs.whole);
+  }
   box.appendChild(acts);
   return box;
 }
 function chatContext(q){
-  var past=chatLog.slice(-6).map(function(m){
+  var past=chatDoc.log.slice(-10).map(function(m){
+    if(m.who==='err')return '';
     if(m.who==='me')return 'Frage: '+m.text;
-    return 'Antwort: '+m.text+(m.proposals&&m.proposals.length?' Vorschläge: '+m.proposals.map(function(p){return p.title+' '+JSON.stringify(p.raw.notes.map(function(o){return [o.pitch,o.start,o.length];}));}).join('; '):'');
-  }).join('\n');
-  return 'Aktuelles Stück. Jede Note steht als [MIDI-Tonhöhe, Beginn, Dauer] in Viertelschlägen:\n'+describePiece(chatBase)+(past?'\n\nBisheriges Gespräch:\n'+past:'')+'\n\nNeue Frage: '+q;
-}
-function parseAnswer(text){
-  var from=text.indexOf('{'),to=text.lastIndexOf('}');
-  if(from>=0&&to>from){try{var j=JSON.parse(text.slice(from,to+1));if(j&&Array.isArray(j.proposals))return j;}catch(e){}}
-  return {reply:text,proposals:[]};
+    return 'Antwort: '+m.text+(m.proposals&&m.proposals.length?' Vorschläge: '+m.proposals.map(function(p){return p.title+' ('+p.kind+') '+JSON.stringify(p.notes.map(function(o){return [o.pitch,o.start,o.length];}));}).join('; '):'');
+  }).filter(Boolean).join('\n');
+  var now=pieceAsRec(),same=now.title===chatDoc.base.title;
+  return 'Ausgangsstück. Jede Note steht als [MIDI-Tonhöhe, Beginn, Dauer] in Viertelschlägen:\n'+describePiece(chatDoc.base)+
+    (same?'':'\n\nDieses Stück hat er zuletzt geöffnet und getestet:\n'+describePiece(now))+
+    (past?'\n\nBisheriges Gespräch:\n'+past:'')+'\n\nNeue Frage: '+q;
 }
 function ask(q){
   q=(q||'').trim();
   if(!q||chatBusy)return;
   if(!apiKey){$('chatNoKey').hidden=false;return;}
-  var content=chatContext(q);
-  chatLog.push({who:'me',text:q});chatBusy=true;$('chatInput').value='';renderChat();
+  var content=chatContext(q),doc=chatDoc;
+  doc.log.push({who:'me',text:q});chatBusy=true;$('chatInput').value='';chats[doc.key]=doc;putChat(doc);renderChat();
   askClaude([{role:'user',content:content}],ANSWER_TOOL).then(function(data){
     var parts=data.content||[],use=parts.filter(function(c){return c.type==='tool_use';})[0],a=use&&use.input;
     if(!a){
@@ -1400,15 +1533,34 @@ function ask(q){
       if(!text)throw new Error('Claude hat keine verwertbare Antwort geliefert. Versuche es nochmals.');
       a=parseAnswer(text);
     }
-    var list=(Array.isArray(a.proposals)?a.proposals:[]).map(function(p,i){return {title:String(p.title||'Vorschlag'),idea:String(p.idea||''),raw:p,rec:proposalRec(p,chatBase,i),saved:false};})
-      .filter(function(x){return x.rec.count>0;});
-    chatLog.push({who:'ai',text:String(a.reply||''),proposals:list});
+    var stamp=Date.now();
+    var list=(Array.isArray(a.proposals)?a.proposals:[]).map(function(p,i){
+      return {id:stamp+i*10,title:String(p.title||'Vorschlag'),idea:String(p.idea||''),kind:p.kind==='uebung'?'uebung':'fortsetzung',notes:Array.isArray(p.notes)?p.notes:[]};
+    }).filter(function(x){return proposalNotes(x,500,0).length>0;});
+    doc.log.push({who:'ai',text:String(a.reply||''),proposals:list});
   }).catch(function(e){
-    chatLog.push({who:'err',text:e.message});
-  }).then(function(){chatBusy=false;renderChat();});
+    doc.log.push({who:'err',text:e.message});
+  }).then(function(){
+    chatBusy=false;
+    if(doc.log.length>60)doc.log=doc.log.slice(-60);
+    putChat(doc);
+    if(chatOpen)renderChat();
+  });
+}
+function parseAnswer(text){
+  var from=text.indexOf('{'),to=text.lastIndexOf('}');
+  if(from>=0&&to>from){try{var j=JSON.parse(text.slice(from,to+1));if(j&&Array.isArray(j.proposals))return j;}catch(e){}}
+  return {reply:text,proposals:[]};
 }
 $('btnChat').addEventListener('click',openChat);
 $('btnChatClose').addEventListener('click',closeChat);
+$('btnChatNew').addEventListener('click',function(e){
+  if(!chatResetArm){chatResetArm=true;e.target.textContent='Gespräch wirklich löschen';return;}
+  chatResetArm=false;e.target.textContent='Neues Gespräch';
+  removeChat(chatDoc.key);chatDoc=newChat(chatKeyNow());
+  $('chatPiece').textContent='Ausgangsstück: '+chatDoc.base.title;
+  renderChat();
+});
 $('btnChatKey').addEventListener('click',function(){closeChat();openSettings();$('optKey').focus();});
 $('chatForm').addEventListener('submit',function(e){e.preventDefault();ask($('chatInput').value);});
 [].forEach.call(document.querySelectorAll('.quick'),function(b){b.addEventListener('click',function(){ask(b.textContent);});});
@@ -1416,7 +1568,7 @@ $('optNames').addEventListener('change',function(e){showNames=e.target.checked;v
 $('optKeys').addEventListener('change',function(e){showKeys=e.target.checked;paintNext();});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&(midiOut||bleChar))keepAwake();});
 
-window.Tastenweg={parseBleMidi:parseBleMidi,scoreRun:scoreRun,transcribe:transcribe,toMidi:toMidi,leadNotes:leadNotes,handleMidi:handleMidi,lessons:LESSONS,state:function(){return {pos:pos,wrong:wrong.slice(),demo:demoTimers.length>0,seq:prefs.seq,zoom:prefs.zoom,libOpen:libOpen,query:query.slice(),selId:selId,piece:lesson.title,recState:recState,recordings:recordings,chat:chatLog,key:!!apiKey};},restore:restoreBackup,backup:backupData};
+window.Tastenweg={parseBleMidi:parseBleMidi,scoreRun:scoreRun,transcribe:transcribe,toMidi:toMidi,leadNotes:leadNotes,handleMidi:handleMidi,lessons:LESSONS,state:function(){return {pos:pos,wrong:wrong.slice(),demo:demoTimers.length>0,seq:prefs.seq,zoom:prefs.zoom,libOpen:libOpen,query:query.slice(),selId:selId,piece:lesson.title,recState:recState,recordings:recordings,chat:chatDoc&&chatDoc.log,chats:Object.keys(chats),key:!!apiKey,steps:recSteps.length,done:done};},restore:restoreBackup,backup:backupData};
 load(LESSONS[0]);
 applyPrefs();
 openDb();
