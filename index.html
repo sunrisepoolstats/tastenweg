@@ -1269,7 +1269,8 @@ var ANSWER_TOOL={name:'antworten',description:'Gibt die Antwort an die Klavier-A
       }}}
     }}}
   }}};
-var SYSTEM_PROMPT='Du bist der Musikpartner in Tastenweg, einer Klavier-App für einen erwachsenen Anfänger. Er spielt auf einem Digitalpiano. Du antwortest immer auf Deutsch und verwendest deutsche Notennamen, also H statt B.\n'+
+var SYSTEM_PROMPT='Antworte immer und ausschliesslich, indem du das Werkzeug antworten aufrufst. Schreibe keinen Text ausserhalb davon.\n'+
+ 'Du bist der Musikpartner in Tastenweg, einer Klavier-App für einen erwachsenen Anfänger. Er spielt auf einem Digitalpiano. Du antwortest immer auf Deutsch und verwendest deutsche Notennamen, also H statt B.\n'+
  'Wenn er nach Musik fragt, liefere zwei oder drei unterschiedliche Vorschläge von 2 bis 8 Takten. Bleib in Tonart, Taktart und Stil des aktuellen Stücks, sofern er nichts anderes wünscht. Halte die Stücke für Anfänger spielbar: wenig Handwechsel, kleine Sprünge, keine Griffe über eine Oktave.\n'+
  'Töne ab dem mittleren C (60) spielt die rechte Hand, tiefere die linke. Soll eine Hand trainiert werden, liegt der Schwerpunkt in ihrem Tonbereich.\n'+
  'Eine Fortsetzung beginnt bei start 0 auf dem ersten Schlag des nächsten Takts. Alle Werte sind Vielfache von 0,25.\n'+
@@ -1278,8 +1279,8 @@ var SYSTEM_PROMPT='Du bist der Musikpartner in Tastenweg, einer Klavier-App für
 function askClaude(messages,tool,timeout){
   if(!apiKey)return Promise.reject(new Error('Trage zuerst deinen API-Schlüssel in den Einstellungen ein.'));
   var abort=new AbortController(),timer=setTimeout(function(){abort.abort();},timeout||90000);
-  var body={model:prefs.model,max_tokens:tool?6000:20,messages:messages};
-  if(tool){body.system=SYSTEM_PROMPT;body.tools=[tool];body.tool_choice={type:'tool',name:tool.name};}
+  var body={model:prefs.model,max_tokens:tool?8000:20,messages:messages};
+  if(tool){body.system=SYSTEM_PROMPT;body.tools=[tool];}
   return fetch(API_URL,{method:'POST',signal:abort.signal,headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)})
   .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
     clearTimeout(timer);
@@ -1380,6 +1381,11 @@ function chatContext(q){
   }).join('\n');
   return 'Aktuelles Stück. Jede Note steht als [MIDI-Tonhöhe, Beginn, Dauer] in Viertelschlägen:\n'+describePiece(chatBase)+(past?'\n\nBisheriges Gespräch:\n'+past:'')+'\n\nNeue Frage: '+q;
 }
+function parseAnswer(text){
+  var from=text.indexOf('{'),to=text.lastIndexOf('}');
+  if(from>=0&&to>from){try{var j=JSON.parse(text.slice(from,to+1));if(j&&Array.isArray(j.proposals))return j;}catch(e){}}
+  return {reply:text,proposals:[]};
+}
 function ask(q){
   q=(q||'').trim();
   if(!q||chatBusy)return;
@@ -1387,8 +1393,13 @@ function ask(q){
   var content=chatContext(q);
   chatLog.push({who:'me',text:q});chatBusy=true;$('chatInput').value='';renderChat();
   askClaude([{role:'user',content:content}],ANSWER_TOOL).then(function(data){
-    var use=(data.content||[]).filter(function(c){return c.type==='tool_use';})[0],a=use&&use.input;
-    if(!a)throw new Error('Claude hat keine verwertbare Antwort geliefert. Versuche es nochmals.');
+    var parts=data.content||[],use=parts.filter(function(c){return c.type==='tool_use';})[0],a=use&&use.input;
+    if(!a){
+      var text=parts.filter(function(c){return c.type==='text';}).map(function(c){return c.text;}).join('\n').trim();
+      if(data.stop_reason==='max_tokens')throw new Error('Die Antwort wurde zu lang. Bitte um einen kürzeren Vorschlag.');
+      if(!text)throw new Error('Claude hat keine verwertbare Antwort geliefert. Versuche es nochmals.');
+      a=parseAnswer(text);
+    }
     var list=(Array.isArray(a.proposals)?a.proposals:[]).map(function(p,i){return {title:String(p.title||'Vorschlag'),idea:String(p.idea||''),raw:p,rec:proposalRec(p,chatBase,i),saved:false};})
       .filter(function(x){return x.rec.count>0;});
     chatLog.push({who:'ai',text:String(a.reply||''),proposals:list});
