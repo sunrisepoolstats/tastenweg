@@ -153,6 +153,26 @@ html[data-view="keys"] .kb{height:clamp(170px,46vh,340px)}
 button.recording{background:var(--bad);border-color:var(--bad);color:var(--sheet);font-weight:700}
 .say.rec strong{color:var(--bad)}
 @media (max-width:620px){.lib-lists{grid-template-columns:minmax(0,1fr)}}
+.chat-log{display:grid;gap:12px}
+.turn p{margin:0;max-width:65ch}
+.turn.me p{color:var(--ink);font-weight:700}
+.turn.ai>p{color:var(--ink)}
+.turn.err p{color:var(--bad)}
+.prop{background:var(--sheet);border:1px solid var(--line);border-radius:6px;margin-top:8px;padding-top:8px}
+.prop>b,.prop>p{display:block;padding:0 12px}
+.prop>p{margin-bottom:8px}
+.quicks{display:flex;flex-wrap:wrap;gap:6px}
+.quicks button{min-height:36px;padding:0 10px;font-size:.875rem}
+.chat-form{display:flex;gap:8px;align-items:flex-end}
+.chat-form textarea{flex:1 1 auto;min-width:0;min-height:60px;padding:8px 10px;font:inherit;color:inherit;border:1px solid var(--line);border-radius:6px;background:var(--sheet);resize:vertical}
+button:disabled{opacity:.55;cursor:default}
+.key-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center}
+.key-row input[type=password]{flex:1 1 200px;min-width:0;min-height:44px;padding:0 10px;font:inherit;color:inherit;border:1px solid var(--line);border-radius:6px;background:var(--sheet)}
+.file-btn{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:var(--sheet);cursor:pointer}
+.file-btn input{position:absolute;opacity:0;width:1px;height:1px}
+.file-btn:focus-within{outline:3px solid var(--brass);outline-offset:2px}
+.msg{font-size:.875rem;margin-top:6px}
+.msg.err{color:var(--bad)}.msg.ok{color:var(--good)}
 /* Vollbild: Noten und Tasten füllen den Schirm, Kopf- und Fussbereich liegen als Overlay darüber */
 html.fs,html.fs body{height:100%;overflow:hidden;overscroll-behavior:none}
 html.fs body{padding-block:8px}
@@ -202,6 +222,7 @@ html.fs .stats dd{font-size:1.125rem}
       <button id="btnReset" type="button">Von vorn</button>
       <button id="btnRec" type="button">Aufnehmen</button>
       <button id="btnLib" type="button">Bibliothek</button>
+      <button id="btnChat" type="button">Fragen</button>
       <button id="btnFull" type="button">Vollbild</button>
       <button id="btnSettings" type="button">Einstellungen</button>
     </div>
@@ -251,6 +272,47 @@ html.fs .stats dd{font-size:1.125rem}
       </div>
       <p>Die kürzeste Note bestimmt, wie stark dein Spiel beim Notieren auf den Takt gerundet wird. Achtel ergeben am Anfang das ruhigere Notenbild.</p>
     </section>
+    <section>
+      <h3>Claude</h3>
+      <p>Für das Fragen-Fenster braucht Tastenweg deinen API-Schlüssel aus der Claude Console. Er bleibt in diesem Browser und wird nur an Claude gesendet.</p>
+      <div class="key-row">
+        <input id="optKey" type="password" autocomplete="off" spellcheck="false" aria-label="API-Schlüssel" placeholder="sk-ant-…">
+        <button class="primary" id="btnKeySave" type="button">Speichern</button>
+        <button id="btnKeyTest" type="button">Verbindung prüfen</button>
+        <button id="btnKeyDel" type="button">Entfernen</button>
+      </div>
+      <p class="msg" id="keyMsg" role="status"></p>
+      <div class="field-row">
+        <label class="field" for="optModel">Modell<select id="optModel"><option value="claude-sonnet-5-5">Sonnet, ausgewogen</option><option value="claude-opus-5-5">Opus, stärker und teurer</option></select></label>
+      </div>
+    </section>
+    <section>
+      <h3>Sicherung</h3>
+      <p>Die Sicherung enthält Aufnahmen, Tastenfolgen und Einstellungen. Der API-Schlüssel gehört nicht dazu. Beim Laden kommen die Aufnahmen zu den vorhandenen dazu, die Einstellungen werden ersetzt.</p>
+      <div class="key-row">
+        <button id="btnBackup" type="button">Sicherung speichern</button>
+        <label class="file-btn" for="optRestore">Sicherung laden<input id="optRestore" type="file" accept=".json,application/json"></label>
+      </div>
+      <p class="msg" id="backupMsg" role="status"></p>
+    </section>
+  </div>
+</div>
+
+<div class="panel" id="chat" role="dialog" aria-modal="true" aria-labelledby="chatTitle" hidden>
+  <div class="panel-in">
+    <div class="panel-head"><h2 id="chatTitle">Fragen</h2><button class="primary" id="btnChatClose" type="button">Schliessen</button></div>
+    <p id="chatPiece"></p>
+    <div class="hint" id="chatNoKey" hidden>Trage zuerst deinen API-Schlüssel ein. <button id="btnChatKey" type="button">Zu den Einstellungen</button></div>
+    <div class="chat-log" id="chatLog"></div>
+    <div class="quicks" aria-label="Vorschläge für Fragen">
+      <button class="quick" id="quick1" type="button">Wie könnte es weitergehen?</button>
+      <button class="quick" id="quick2" type="button">Schreib eine Übung für die linke Hand</button>
+      <button class="quick" id="quick3" type="button">Mach den letzten Vorschlag einfacher</button>
+    </div>
+    <form class="chat-form" id="chatForm">
+      <textarea id="chatInput" rows="2" aria-label="Deine Frage an Claude" placeholder="Deine Frage an Claude"></textarea>
+      <button class="primary" id="btnAsk" type="submit">Senden</button>
+    </form>
   </div>
 </div>
 
@@ -476,6 +538,7 @@ function noteOn(n,vel,fromScreen){
   if(fromScreen){if(outConnected())sendOut([0x90,n,vel]);else sounding[n]=tone(n,vel);}
   if(recState){captureOn(n,vel);if(!fromScreen)trackInput(n,-1);return;}
   if(settingsOpen){if(rec&&!fromScreen)recNote(n);return;}
+  if(chatOpen)return;
   if(libOpen){if(!fromScreen)libInput(n);return;}
   var at=pos,before=wrong[at],open=!done;
   press(n);
@@ -500,6 +563,7 @@ function pedal(cc,val){
   var tok=1000+cc;
   if(recState)trackInput(tok,-1);
   else if(settingsOpen){if(rec)recNote(tok);}
+  else if(chatOpen)return;
   else if(libOpen)libInput(tok);
   else trackInput(tok,-1);
 }
@@ -557,10 +621,11 @@ function connectBle(){
 }
 
 /* ---------- Vorspielen ---------- */
-var demoTimers=[],demoOff=null,demoStopAt=-1;
+var demoTimers=[],demoOff=null,demoStopAt=-1,soloBtn=null;
 function stopDemo(){
   demoTimers.forEach(clearTimeout);demoTimers=[];
   if(demoOff){demoOff();demoOff=null;}
+  if(soloBtn){soloBtn.textContent='Anhören';soloBtn=null;}
   Object.keys(keys).forEach(function(k){keys[k].classList.remove('down');});
   $('btnDemo').textContent='Vorspielen';
 }
@@ -633,7 +698,7 @@ document.addEventListener('fullscreenchange',function(){
 });
 var swipe=null;
 document.addEventListener('touchstart',function(e){
-  if(!isFs()||settingsOpen||libOpen||e.touches.length!==1){swipe=null;return;}
+  if(!isFs()||settingsOpen||libOpen||chatOpen||e.touches.length!==1){swipe=null;return;}
   var t=e.touches[0];
   swipe=e.target.closest&&e.target.closest('input')?null:{x:t.clientX,y:t.clientY,at:Date.now()};
 },{passive:true});
@@ -647,13 +712,13 @@ document.addEventListener('touchend',function(e){
   else{if(shown(bars.top))hideBar(bars.top);else showBar(bars.foot);}
 },{passive:true});
 document.addEventListener('mousemove',function(e){
-  if(!isFs()||settingsOpen||libOpen)return;
+  if(!isFs()||settingsOpen||libOpen||chatOpen)return;
   if(e.clientY<10)showBar(bars.top);else if(e.clientY>window.innerHeight-10)showBar(bars.foot);
 });
 
 /* Ansicht und Notengrösse */
-var prefs={view:'both',zoom:100,seq:{},bpm:80,meter:4,grid:2};
-try{var sp=JSON.parse(localStorage.getItem('tastenweg-prefs')||'{}');if(sp.view)prefs.view=sp.view;if(sp.zoom)prefs.zoom=Math.min(200,Math.max(25,Math.round(sp.zoom/25)*25));if(sp.seq)prefs.seq=sp.seq;if(sp.bpm)prefs.bpm=sp.bpm;if(sp.meter)prefs.meter=sp.meter;if(sp.grid)prefs.grid=sp.grid;}catch(e){}
+var prefs={view:'both',zoom:100,seq:{},bpm:80,meter:4,grid:2,model:'claude-sonnet-5-5'};
+try{var sp=JSON.parse(localStorage.getItem('tastenweg-prefs')||'{}');if(sp.view)prefs.view=sp.view;if(sp.zoom)prefs.zoom=Math.min(200,Math.max(25,Math.round(sp.zoom/25)*25));if(sp.seq)prefs.seq=sp.seq;if(sp.bpm)prefs.bpm=sp.bpm;if(sp.meter)prefs.meter=sp.meter;if(sp.grid)prefs.grid=sp.grid;if(sp.model)prefs.model=sp.model;}catch(e){}
 function savePrefs(){try{localStorage.setItem('tastenweg-prefs',JSON.stringify(prefs));}catch(e){}}
 var viewBtns=[$('viewBoth'),$('viewNotes'),$('viewKeys')];
 function applyPrefs(){
@@ -665,7 +730,7 @@ function applyPrefs(){
   $('optZoom').value=prefs.zoom;
   $('zoomVal').textContent=prefs.zoom+' %';
   $('optBpm').value=prefs.bpm;$('bpmVal').textContent=prefs.bpm+' BPM';
-  $('optMeter').value=prefs.meter;$('optGrid').value=prefs.grid;
+  $('optMeter').value=prefs.meter;$('optGrid').value=prefs.grid;$('optModel').value=prefs.model;
   paintNotes();
 }
 viewBtns.forEach(function(b){b.addEventListener('click',function(){prefs.view=b.dataset.view;savePrefs();applyPrefs();});});
@@ -677,11 +742,11 @@ window.addEventListener('resize',paintNotes);
 
 /* Einstellungen */
 var settingsOpen=false,panelEl=$('panel');
-function openSettings(){if(libOpen)closeLib();seqMsg={};settingsOpen=true;panelEl.hidden=false;hideBars();renderSeqs();$('btnClose').focus();}
+function openSettings(){if(libOpen)closeLib();seqMsg={};showKey();setKeyMsg('','');setBackupMsg('','');settingsOpen=true;panelEl.hidden=false;hideBars();renderSeqs();$('btnClose').focus();}
 function closeSettings(){cancelRec();settingsOpen=false;panelEl.hidden=true;paintNotes();}
 $('btnSettings').addEventListener('click',openSettings);
 $('btnClose').addEventListener('click',closeSettings);
-document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(settingsOpen)closeSettings();else if(libOpen)closeLib();});
+document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(settingsOpen)closeSettings();else if(libOpen)closeLib();else if(chatOpen)closeChat();});
 
 /* Tonfolgen */
 var GLOBAL=['demo','reset','record','library','full'],MENU=['next','confirm','back'];
@@ -978,8 +1043,9 @@ function moveHead(t){
   var ph=$('ph');if(ph){ph.setAttribute('x1',x);ph.setAttribute('x2',x);}
   paintNotes();
 }
-function playRec(){
-  var r=lesson.rec,all=r.notes,lo=all.reduce(function(m,o){return Math.min(m,o.t);},0),lead=200-lo,sounding={},last=0,seq=0;
+function playRec(r,solo){
+  r=r||lesson.rec;
+  var all=r.notes,lo=all.reduce(function(m,o){return Math.min(m,o.t);},0),lead=200-lo,sounding={},last=0,seq=0;
   function off(key){var s=sounding[key];if(!s)return;delete sounding[key];if(outConnected())sendOut([0x80,s.n,0]);if(s.stop)s.stop();var k=keys[s.n];if(k)k.classList.remove('down');}
   all.forEach(function(o){
     var key=++seq,at=o.t+lead,to=at+o.d;
@@ -987,7 +1053,7 @@ function playRec(){
     demoTimers.push(setTimeout(function(){
       var k=keys[o.n],stop=null;
       if(k)k.classList.add('down');
-      moveHead(o.t);
+      if(!solo)moveHead(o.t);
       if(outConnected())sendOut([0x90,o.n,o.v]);else stop=tone(o.n,o.v);
       sounding[key]={n:o.n,stop:stop};
     },at));
@@ -995,7 +1061,7 @@ function playRec(){
   });
   (r.pedal||[]).forEach(function(p){demoTimers.push(setTimeout(function(){if(outConnected())sendOut([0xB0,64,p.v]);},p.t+lead));});
   demoOff=function(){Object.keys(sounding).forEach(off);if(outConnected())sendOut([0xB0,64,0]);};
-  demoTimers.push(setTimeout(function(){if(demoOff){demoOff();demoOff=null;}demoTimers=[];reset();},last+250));
+  demoTimers.push(setTimeout(function(){if(demoOff){demoOff();demoOff=null;}demoTimers=[];if(solo)stopDemo();else reset();},last+250));
 }
 
 /* ---------- Aufnahme als Noten ---------- */
@@ -1044,7 +1110,7 @@ function transcribe(r,grid){
   });
   var maxQ=items.reduce(function(m,o){return Math.max(m,o.q+o.len);},1),bars=Math.ceil(maxQ/barLen);
   var ri=items.filter(function(o){return o.n>=60;}),le=items.filter(function(o){return o.n<60;});
-  return {u:u,shift:shift,per:per,barLen:barLen,bars:bars,treble:staffTokens(ri,bars,barLen,g),bass:staffTokens(le,bars,barLen,g)};
+  return {items:items,u:u,shift:shift,per:per,barLen:barLen,bars:bars,treble:staffTokens(ri,bars,barLen,g),bass:staffTokens(le,bars,barLen,g)};
 }
 function buildGrand(){
   var T=transcribe(lesson.rec,prefs.grid),unit=15,left=88,barLen=T.barLen;
@@ -1127,16 +1193,219 @@ function toMidi(r){
   var len=tr.length,head=[0x4D,0x54,0x68,0x64,0,0,0,6,0,0,0,1,(ppq>>8)&255,ppq&255,0x4D,0x54,0x72,0x6B,(len>>>24)&255,(len>>16)&255,(len>>8)&255,len&255];
   return new Uint8Array(head.concat(tr));
 }
-function saveMidi(r){
-  var url=URL.createObjectURL(new Blob([toMidi(r)],{type:'audio/midi'})),a=document.createElement('a');
-  a.href=url;a.download=r.title.replace(/[^\wäöüÄÖÜ -]/g,'_')+'.mid';document.body.appendChild(a);a.click();a.remove();
+function saveMidi(r){saveFile(r.title.replace(/[^\wäöüÄÖÜ -]/g,'_')+'.mid',new Blob([toMidi(r)],{type:'audio/midi'}));}
+/* ---------- Datei speichern ---------- */
+function saveFile(name,blob){
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
   setTimeout(function(){URL.revokeObjectURL(url);},2000);
 }
+
+/* ---------- Sicherung ---------- */
+function backupData(){return {app:'tastenweg',version:1,saved:new Date().toISOString(),prefs:prefs,best:best,recordings:recordings};}
+function setBackupMsg(kind,text){var el=$('backupMsg');el.className='msg '+kind;el.textContent=text;}
+function saveBackup(){
+  var day=new Date().toISOString().slice(0,10);
+  saveFile('tastenweg-sicherung-'+day+'.json',new Blob([JSON.stringify(backupData())],{type:'application/json'}));
+  setBackupMsg('ok','Sicherung erstellt: '+recordings.length+' Aufnahmen und deine Einstellungen. Der API-Schlüssel ist nicht enthalten.');
+}
+function validRecording(r){
+  return r&&typeof r.id==='number'&&typeof r.title==='string'&&r.bpm>0&&Array.isArray(r.notes)&&r.notes.every(function(o){return o&&o.n>=0&&o.n<=127&&isFinite(o.t)&&isFinite(o.d);});
+}
+function restoreBackup(text){
+  var d;
+  try{d=JSON.parse(text);}catch(e){d=null;}
+  if(!d||d.app!=='tastenweg'||!Array.isArray(d.recordings)){setBackupMsg('err','Das ist keine Tastenweg-Sicherung.');return 0;}
+  var good=d.recordings.filter(validRecording),before=recordings.length;
+  good.forEach(putRecording);
+  if(d.prefs){
+    ['view','zoom','bpm','meter','grid','model'].forEach(function(k){if(d.prefs[k]!==undefined)prefs[k]=d.prefs[k];});
+    if(d.prefs.seq)prefs.seq=d.prefs.seq;
+    savePrefs();applyPrefs();
+  }
+  if(d.best){best=d.best;saveBest();drawLessons();}
+  renderSeqs();
+  setBackupMsg('ok','Sicherung geladen: '+(recordings.length-before)+' neue Aufnahmen, insgesamt '+recordings.length+'.');
+  return good.length;
+}
+$('btnBackup').addEventListener('click',saveBackup);
+$('optRestore').addEventListener('change',function(e){
+  var f=e.target.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(){restoreBackup(String(r.result));e.target.value='';};r.readAsText(f);
+});
+
+/* ---------- Claude ---------- */
+var API_URL='https://api.anthropic.com/v1/messages',KEY_NAME='tastenweg-key';
+var apiKey='';try{apiKey=localStorage.getItem(KEY_NAME)||'';}catch(e){}
+function setKeyMsg(kind,text){var el=$('keyMsg');el.className='msg '+kind;el.textContent=text;}
+function showKey(){$('optKey').value='';$('optKey').placeholder=apiKey?'Schlüssel ist gespeichert':'sk-ant-…';$('btnKeyDel').hidden=!apiKey;$('btnKeyTest').hidden=!apiKey;}
+$('btnKeySave').addEventListener('click',function(){
+  var v=$('optKey').value.trim();
+  if(!v){setKeyMsg('err','Füge zuerst deinen Schlüssel ein.');return;}
+  apiKey=v;try{localStorage.setItem(KEY_NAME,v);}catch(e){}
+  showKey();setKeyMsg('ok','Schlüssel gespeichert.');
+});
+$('btnKeyDel').addEventListener('click',function(){
+  apiKey='';try{localStorage.removeItem(KEY_NAME);}catch(e){}
+  showKey();setKeyMsg('ok','Schlüssel entfernt.');
+});
+$('btnKeyTest').addEventListener('click',function(){
+  setKeyMsg('','Prüfe die Verbindung …');
+  askClaude([{role:'user',content:'Antworte nur mit dem Wort OK.'}],null,20000).then(function(){setKeyMsg('ok','Die Verbindung zu Claude funktioniert.');},function(e){setKeyMsg('err',e.message);});
+});
+$('optModel').addEventListener('change',function(e){prefs.model=e.target.value;savePrefs();});
+
+var ANSWER_TOOL={name:'antworten',description:'Gibt die Antwort an die Klavier-App zurück. Musik gehört immer in proposals, nie in reply.',
+  input_schema:{type:'object',required:['reply','proposals'],properties:{
+    reply:{type:'string',description:'Kurze Antwort auf Deutsch, höchstens drei Sätze.'},
+    proposals:{type:'array',maxItems:3,items:{type:'object',required:['title','idea','kind','notes'],properties:{
+      title:{type:'string',description:'Kurzer Name, höchstens vier Wörter.'},
+      idea:{type:'string',description:'Ein Satz zur Idee.'},
+      kind:{type:'string',enum:['fortsetzung','uebung'],description:'fortsetzung setzt das aktuelle Stück fort. uebung steht für sich.'},
+      notes:{type:'array',items:{type:'object',required:['pitch','start','length'],properties:{
+        pitch:{type:'integer',minimum:21,maximum:108,description:'MIDI-Tonhöhe, 60 ist das mittlere C.'},
+        start:{type:'number',minimum:0,description:'Beginn in Viertelschlägen. 0 ist der erste Schlag des Vorschlags.'},
+        length:{type:'number',minimum:0.25,description:'Dauer in Viertelschlägen.'}
+      }}}
+    }}}
+  }}};
+var SYSTEM_PROMPT='Du bist der Musikpartner in Tastenweg, einer Klavier-App für einen erwachsenen Anfänger. Er spielt auf einem Digitalpiano. Du antwortest immer auf Deutsch und verwendest deutsche Notennamen, also H statt B.\n'+
+ 'Wenn er nach Musik fragt, liefere zwei oder drei unterschiedliche Vorschläge von 2 bis 8 Takten. Bleib in Tonart, Taktart und Stil des aktuellen Stücks, sofern er nichts anderes wünscht. Halte die Stücke für Anfänger spielbar: wenig Handwechsel, kleine Sprünge, keine Griffe über eine Oktave.\n'+
+ 'Töne ab dem mittleren C (60) spielt die rechte Hand, tiefere die linke. Soll eine Hand trainiert werden, liegt der Schwerpunkt in ihrem Tonbereich.\n'+
+ 'Eine Fortsetzung beginnt bei start 0 auf dem ersten Schlag des nächsten Takts. Alle Werte sind Vielfache von 0,25.\n'+
+ 'Bei urheberrechtlich geschützten Stücken gibst du keine Melodie und keine Noten des Stücks wieder. Baue stattdessen eigene Übungen zu Technik, Rhythmus und Akkordfolgen. Bei gemeinfreien Stücken sagst du dazu, dass die Noten aus dem Gedächtnis stammen und Fehler enthalten können.\n'+
+ 'Stellt er eine Frage ohne Musikwunsch, antworte nur in reply und lass proposals leer.';
+function askClaude(messages,tool,timeout){
+  if(!apiKey)return Promise.reject(new Error('Trage zuerst deinen API-Schlüssel in den Einstellungen ein.'));
+  var abort=new AbortController(),timer=setTimeout(function(){abort.abort();},timeout||90000);
+  var body={model:prefs.model,max_tokens:tool?6000:20,messages:messages};
+  if(tool){body.system=SYSTEM_PROMPT;body.tools=[tool];body.tool_choice={type:'tool',name:tool.name};}
+  return fetch(API_URL,{method:'POST',signal:abort.signal,headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)})
+  .then(function(res){return res.json().catch(function(){return {};}).then(function(data){
+    clearTimeout(timer);
+    if(res.ok)return data;
+    var detail=data&&data.error&&data.error.message||'';
+    if(res.status===401)throw new Error('Claude lehnt den Schlüssel ab. Prüfe ihn in den Einstellungen.');
+    if(res.status===429)throw new Error('Zu viele Anfragen oder das Ausgabenlimit ist erreicht. Warte kurz oder prüfe die Claude Console.');
+    if(/credit balance/i.test(detail))throw new Error('Dein API-Guthaben ist aufgebraucht. Lade es in der Claude Console auf.');
+    if(res.status===404)throw new Error('Dieses Modell ist nicht verfügbar. Wähle in den Einstellungen ein anderes.');
+    if(res.status>=500)throw new Error('Claude ist gerade nicht erreichbar. Versuche es gleich nochmals.');
+    throw new Error('Claude meldet einen Fehler: '+(detail||res.status));
+  });},function(e){
+    clearTimeout(timer);
+    throw new Error(e&&e.name==='AbortError'?'Claude hat zu lange nicht geantwortet. Versuche es nochmals.':'Claude ist nicht erreichbar. Prüfe die Internetverbindung.');
+  });
+}
+
+/* ---------- Stück und Vorschläge umwandeln ---------- */
+function pieceAsRec(){
+  if(isRec())return lesson.rec;
+  var beat=60000/lesson.tempo,at=0;
+  return {id:0,title:lesson.title,bpm:lesson.tempo,meter:4,created:Date.now(),pedal:[],notes:lesson.notes.map(function(o){
+    var d=o.beats*beat,n={n:o.midi,v:72,t:Math.round(at*beat),d:Math.round(d*0.92)};at+=o.beats;return n;})};
+}
+function describePiece(r){
+  var T=transcribe(r,prefs.grid);
+  return JSON.stringify({titel:r.title,tempo:r.bpm,takt:T.per+'/4',takte:T.bars,noten:T.items.map(function(o){return [o.n,o.q/4,o.len/4];})});
+}
+function proposalNotes(p,beatMs,offsetBeats){
+  var out=[];
+  (Array.isArray(p.notes)?p.notes:[]).forEach(function(o){
+    var pitch=Math.round(o.pitch),start=Math.round(o.start*4)/4,len=Math.round(o.length*4)/4;
+    if(!(pitch>=21&&pitch<=108)||!(start>=0)||!(len>0)||len>32)return;
+    out.push({n:pitch,v:72,t:Math.round((offsetBeats+start)*beatMs),d:Math.round(len*beatMs*0.95)});
+  });
+  return out.sort(function(a,b){return a.t-b.t;}).slice(0,400);
+}
+function proposalRec(p,base,index){
+  var T=transcribe(base,prefs.grid),beat=60000/base.bpm,join=p.kind==='fortsetzung',offset=join?T.bars*T.per:0;
+  var added=proposalNotes(p,beat,offset),stamp=Date.now()+index;
+  var solo={id:stamp,title:p.title,bpm:base.bpm,meter:base.meter||4,created:stamp,source:'claude',pedal:[],
+    notes:proposalNotes(p,beat,0)};
+  var whole={id:stamp,title:join?base.title+' + '+p.title:p.title,bpm:base.bpm,meter:base.meter||4,created:stamp,source:'claude',pedal:[],
+    notes:(join?base.notes:[]).concat(added)};
+  return {solo:solo,whole:whole,count:added.length};
+}
+
+/* ---------- Fragen-Fenster ---------- */
+var chatOpen=false,chatEl=$('chat'),chatLog=[],chatBusy=false,chatBase=null;
+function openChat(){
+  if(recState)return;
+  if(settingsOpen)closeSettings();
+  stopDemo();hideBars();
+  var r=pieceAsRec(),same=chatBase&&chatBase.title===r.title&&chatBase.notes.length===r.notes.length;
+  if(!same){chatBase=r;chatLog=[];}
+  chatOpen=true;chatEl.hidden=false;
+  $('chatPiece').textContent='Bezug: '+r.title+' · '+r.notes.length+' Töne';
+  $('chatNoKey').hidden=!!apiKey;
+  renderChat();
+}
+function closeChat(){stopDemo();chatOpen=false;chatEl.hidden=true;paintNotes();}
+function renderChat(){
+  var box=$('chatLog');box.textContent='';
+  chatLog.forEach(function(m){
+    var el=document.createElement('div');el.className='turn '+m.who;
+    var p=document.createElement('p');p.textContent=m.text;el.appendChild(p);
+    (m.proposals||[]).forEach(function(x){el.appendChild(proposalCard(x));});
+    box.appendChild(el);
+  });
+  if(chatBusy){var w=document.createElement('p');w.className='lib-empty';w.textContent='Claude denkt nach …';box.appendChild(w);}
+  $('btnAsk').disabled=chatBusy;
+  chatEl.scrollTop=chatEl.scrollHeight;
+}
+function proposalCard(x){
+  var box=document.createElement('div');box.className='prop';
+  var t=document.createElement('b');t.textContent=x.title;box.appendChild(t);
+  var i=document.createElement('p');i.textContent=x.idea;box.appendChild(i);
+  var acts=document.createElement('div');acts.className='item-acts';
+  function btn(text,fn){var b=document.createElement('button');b.type='button';b.textContent=text;b.addEventListener('click',function(){fn(b);});acts.appendChild(b);return b;}
+  btn('Anhören',function(b){
+    if(soloBtn===b){stopDemo();return;}
+    stopDemo();soloBtn=b;b.textContent='Anhalten';
+    demoTimers=[];playRec(x.rec.solo,true);
+  });
+  btn('Noten öffnen',function(){closeChat();openRec(x.rec.whole);});
+  var s=btn(x.saved?'Gespeichert':'In Bibliothek speichern',function(b){
+    if(x.saved)return;
+    var ok=putRecording(x.rec.whole);x.saved=true;b.textContent=ok?'Gespeichert':'Nur bis zum Schliessen gespeichert';b.disabled=true;
+  });
+  if(x.saved)s.disabled=true;
+  box.appendChild(acts);
+  return box;
+}
+function chatContext(q){
+  var past=chatLog.slice(-6).map(function(m){
+    if(m.who==='me')return 'Frage: '+m.text;
+    return 'Antwort: '+m.text+(m.proposals&&m.proposals.length?' Vorschläge: '+m.proposals.map(function(p){return p.title+' '+JSON.stringify(p.raw.notes.map(function(o){return [o.pitch,o.start,o.length];}));}).join('; '):'');
+  }).join('\n');
+  return 'Aktuelles Stück. Jede Note steht als [MIDI-Tonhöhe, Beginn, Dauer] in Viertelschlägen:\n'+describePiece(chatBase)+(past?'\n\nBisheriges Gespräch:\n'+past:'')+'\n\nNeue Frage: '+q;
+}
+function ask(q){
+  q=(q||'').trim();
+  if(!q||chatBusy)return;
+  if(!apiKey){$('chatNoKey').hidden=false;return;}
+  var content=chatContext(q);
+  chatLog.push({who:'me',text:q});chatBusy=true;$('chatInput').value='';renderChat();
+  askClaude([{role:'user',content:content}],ANSWER_TOOL).then(function(data){
+    var use=(data.content||[]).filter(function(c){return c.type==='tool_use';})[0],a=use&&use.input;
+    if(!a)throw new Error('Claude hat keine verwertbare Antwort geliefert. Versuche es nochmals.');
+    var list=(Array.isArray(a.proposals)?a.proposals:[]).map(function(p,i){return {title:String(p.title||'Vorschlag'),idea:String(p.idea||''),raw:p,rec:proposalRec(p,chatBase,i),saved:false};})
+      .filter(function(x){return x.rec.count>0;});
+    chatLog.push({who:'ai',text:String(a.reply||''),proposals:list});
+  }).catch(function(e){
+    chatLog.push({who:'err',text:e.message});
+  }).then(function(){chatBusy=false;renderChat();});
+}
+$('btnChat').addEventListener('click',openChat);
+$('btnChatClose').addEventListener('click',closeChat);
+$('btnChatKey').addEventListener('click',function(){closeChat();openSettings();$('optKey').focus();});
+$('chatForm').addEventListener('submit',function(e){e.preventDefault();ask($('chatInput').value);});
+[].forEach.call(document.querySelectorAll('.quick'),function(b){b.addEventListener('click',function(){ask(b.textContent);});});
 $('optNames').addEventListener('change',function(e){showNames=e.target.checked;var p=pos,d=done,w=wrong,t=times;buildScore();buildKeys();pos=p;done=d;wrong=w;times=t;paintNotes();paintNext();});
 $('optKeys').addEventListener('change',function(e){showKeys=e.target.checked;paintNext();});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&(midiOut||bleChar))keepAwake();});
 
-window.Tastenweg={parseBleMidi:parseBleMidi,scoreRun:scoreRun,transcribe:transcribe,toMidi:toMidi,leadNotes:leadNotes,handleMidi:handleMidi,lessons:LESSONS,state:function(){return {pos:pos,wrong:wrong.slice(),demo:demoTimers.length>0,seq:prefs.seq,zoom:prefs.zoom,libOpen:libOpen,query:query.slice(),selId:selId,piece:lesson.title,recState:recState,recordings:recordings};}};
+window.Tastenweg={parseBleMidi:parseBleMidi,scoreRun:scoreRun,transcribe:transcribe,toMidi:toMidi,leadNotes:leadNotes,handleMidi:handleMidi,lessons:LESSONS,state:function(){return {pos:pos,wrong:wrong.slice(),demo:demoTimers.length>0,seq:prefs.seq,zoom:prefs.zoom,libOpen:libOpen,query:query.slice(),selId:selId,piece:lesson.title,recState:recState,recordings:recordings,chat:chatLog,key:!!apiKey};},restore:restoreBackup,backup:backupData};
 load(LESSONS[0]);
 applyPrefs();
 openDb();
