@@ -10,7 +10,7 @@
   --paper:#eef2f6;--sheet:#ffffff;--ink:#16233a;--muted:#55657b;--line:#c5d0dc;
   --brass:#865610;--brass-soft:#f3e4c6;--on-brass:#ffffff;
   --good:#17754a;--bad:#b3261e;--warn:#8f5b00;
-  --key:#fbfcfd;--key-ink:#16233a;--key-black:#16233a;--key-next:#efd9a6;
+  --key:#fbfcfd;--key-ink:#16233a;--key-black:#16233a;--key-next:#efd9a6;--ref:#cdeafa;--ref-ink:#14587e;--ref-key:#a9dcf5;
   --zoom:1;
   --display:"Bodoni Moda","Didot","Times New Roman",serif;
   --body:"Atkinson Hyperlegible","Segoe UI",Roboto,sans-serif;
@@ -20,12 +20,12 @@
   --paper:#0d1625;--sheet:#131e31;--ink:#e6ecf4;--muted:#9fafc3;--line:#2e3d55;
   --brass:#e3b862;--brass-soft:#3b3019;--on-brass:#1a1408;
   --good:#62d19b;--bad:#ff9186;--warn:#f1c063;
-  --key:#dfe6ee;--key-ink:#16233a;--key-black:#070c15;--key-next:#e3b862;color-scheme:dark}}
+  --key:#dfe6ee;--key-ink:#16233a;--key-black:#070c15;--key-next:#e3b862;--ref:#1e4a66;--ref-ink:#b6e2fb;--ref-key:#7cc6ee;color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#0d1625;--sheet:#131e31;--ink:#e6ecf4;--muted:#9fafc3;--line:#2e3d55;
   --brass:#e3b862;--brass-soft:#3b3019;--on-brass:#1a1408;
   --good:#62d19b;--bad:#ff9186;--warn:#f1c063;
-  --key:#dfe6ee;--key-ink:#16233a;--key-black:#070c15;--key-next:#e3b862;color-scheme:dark}
+  --key:#dfe6ee;--key-ink:#16233a;--key-black:#070c15;--key-next:#e3b862;--ref:#1e4a66;--ref-ink:#b6e2fb;--ref-key:#7cc6ee;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{min-height:100%}
@@ -98,6 +98,11 @@ html[data-view="keys"] .kb{height:clamp(170px,46vh,340px)}
 .kb{position:relative;display:flex;height:clamp(112px,25vh,190px);touch-action:none;user-select:none;-webkit-user-select:none}
 .key{position:relative;flex:1 1 0;min-width:0;background:var(--key);color:var(--key-ink);border:1px solid var(--line);border-top:0;border-radius:0 0 5px 5px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:6px;font-size:.8125rem;font-weight:700}
 .key.blk{position:absolute;top:0;height:60%;background:var(--key-black);border:0;z-index:2;flex:none;padding:0}
+.key.ref{background:var(--ref-key)}
+.key.blk.ref{background:var(--ref-key)}
+.key.mid::after{content:"";position:absolute;left:50%;bottom:26px;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--brass)}
+.kb.wide .key{font-size:.625rem;white-space:nowrap}
+.rl{font:700 8px var(--body);fill:var(--ref-ink)!important}
 .key.next{background:var(--key-next)}
 .key.blk.next{background:var(--brass)}
 .key.down{background:var(--brass);color:var(--on-brass)}
@@ -220,6 +225,7 @@ html.fs .stats dd{font-size:1.125rem}
       <button class="primary" id="btnDemo" type="button">Play</button>
       <button id="btnFwd" type="button" aria-label="Eine Note vor">Vor ›</button>
       <button id="btnReset" type="button">Von vorn</button>
+      <button id="btnRef" type="button">Referenzlinie</button>
       <button id="btnRec" type="button">Aufnehmen</button>
       <button id="btnLib" type="button">Bibliothek</button>
       <button id="btnChat" type="button">Fragen</button>
@@ -253,6 +259,7 @@ html.fs .stats dd{font-size:1.125rem}
       <label class="zoom" for="optZoom">Notengrösse<input id="optZoom" type="range" min="25" max="200" step="25" value="100"><output id="zoomVal" for="optZoom">100 %</output></label>
       <div class="checks">
         <label class="chk" for="optNames"><input id="optNames" type="checkbox" checked>Notennamen</label>
+        <label class="chk" for="optOct"><input id="optOct" type="checkbox" checked>Oktavzahlen</label>
         <label class="chk" for="optKeys"><input id="optKeys" type="checkbox" checked>Taste zeigen</label>
       </div>
     </section>
@@ -331,7 +338,7 @@ html.fs .stats dd{font-size:1.125rem}
 (function(){
 'use strict';
 /* ---------- Übungen ---------- */
-var NAMES=['C','Cis','D','Dis','E','F','Fis','G','Gis','A','B','H'];
+var NAMES=['C','Cis','D','Dis','E','F','Fis','G','Gis','A','Bb','B'];
 var STEP={C:0,D:1,E:2,F:3,G:4,A:5,H:6};
 var SEMI=[0,2,4,5,7,9,11];
 function m(s){var n=s[0],o=+s[1];return (o+1)*12+SEMI[STEP[n]];}
@@ -349,7 +356,7 @@ var LESSONS=[
   notes:seq('E4:3 E4:3 F4:4 G4:5 G4:5 F4:4 E4:3 D4:2 C4:1 C4:1 D4:2 E4:3 E4:3:1.5 D4:2:0.5 D4:2:2')}
 ];
 function noteName(n){return NAMES[n%12]+(Math.floor(n/12)-1);}
-function shortName(n){return NAMES[n%12];}
+function shortName(n){return prefs.oct?noteName(n):NAMES[n%12];}
 
 /* ---------- reine Logik ---------- */
 function parseBleMidi(p){
@@ -404,6 +411,17 @@ function hint(text){hintEl.hidden=!text;hintEl.textContent=text||'';}
 
 /* ---------- Notenbild ---------- */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function refBand(bottom,base,w,marks){
+  if(prefs.ref===null)return '';
+  var y=bottom-(diaOf(prefs.ref)-base)*5,o='<rect class="ref" x="6" y="'+(y-4.5)+'" width="'+(w-14)+'" height="9" fill="var(--ref)"/>';
+  marks.forEach(function(x){o+='<text class="rl" x="'+x+'" y="'+(y+3)+'">'+esc(noteName(prefs.ref))+'</text>';});
+  return o;
+}
+function refOutside(){
+  if(prefs.ref===null||isRec())return false;
+  var y=80-(diaOf(prefs.ref)-(lesson.clef==='bass'?18:30))*5;
+  return y<6||y>116;
+}
 function buildScore(){
   if(isRec()){buildGrand();return;}
   grand=null;recSteps=[];stepEls=[];
@@ -412,7 +430,7 @@ function buildScore(){
   var x=86,xs=[],acc=0,bars=[];
   lesson.notes.forEach(function(no){xs.push(x);acc+=no.beats;var nx=x+22+no.beats*27;if(acc%4===0&&acc<total())bars.push(nx-9);x=nx+(acc%4===0?6:0);});
   function total(){return lesson.notes.reduce(function(s,o){return s+o.beats;},0);}
-  var w=x+6,h='';
+  var w=x+6,h=refBand(bottom,base,w,bars.map(function(b){return b-14;}).concat([70]));
   h+='<g class="staff">';
   for(var i=0;i<5;i++)h+='<line x1="6" x2="'+(w-8)+'" y1="'+(bottom-i*10)+'" y2="'+(bottom-i*10)+'"/>';
   bars.forEach(function(b){h+='<line x1="'+b+'" x2="'+b+'" y1="40" y2="80"/>';});
@@ -439,6 +457,7 @@ function buildScore(){
   });
   scoreEl.innerHTML='<svg viewBox="0 0 '+w+' 120" style="aspect-ratio:'+w+'/120;width:auto;max-width:none" role="img" aria-label="Noten der Übung '+lesson.title+'">'+h+'</svg>';
   noteEls=[].slice.call(scoreEl.querySelectorAll('.n'));noteXs=xs;
+  if(refOutside()){var rr=scoreEl.querySelector('.ref');if(rr)rr.setAttribute('hidden','');scoreEl.querySelectorAll('.rl').forEach(function(e){e.remove();});if(rr)rr.remove();}
 }
 function stepGroups(){return isRec()?stepEls:noteEls.map(function(e){return [e];});}
 function paintNotes(){
@@ -463,12 +482,13 @@ function buildKeys(){
   lo-=lo%12;hi=hi+((12-hi%12)%12);
   var whites=[],blacks=[],html='';
   for(var n=lo;n<=hi;n++){(SEMI.indexOf(n%12)>=0?whites:blacks).push(n);}
-  whites.forEach(function(n){html+='<div class="key" data-n="'+n+'" role="button" aria-label="'+noteName(n)+'">'+(showNames&&whites.length<=15?shortName(n):'')+'</div>';});
+  whites.forEach(function(n){html+='<div class="key'+(n===60?' mid':'')+'" data-n="'+n+'" role="button" aria-label="'+noteName(n)+'">'+(showNames?(whites.length<=15?shortName(n):(n%12===0?noteName(n):'')):'')+'</div>';});
   var wPct=100/whites.length;
   blacks.forEach(function(n){var idx=whites.indexOf(n+1);
     html+='<div class="key blk" data-n="'+n+'" role="button" aria-label="'+noteName(n)+'" style="left:'+(idx*wPct-wPct*0.3)+'%;width:'+(wPct*0.6)+'%"></div>';});
-  kbEl.innerHTML=html;keys={};
+  kbEl.innerHTML=html;keys={};kbEl.classList.toggle('wide',whites.length>15);
   [].forEach.call(kbEl.children,function(k){keys[k.dataset.n]=k;});
+  paintRef();
 }
 function paintNext(){
   Object.keys(keys).forEach(function(k){keys[k].classList.remove('next');});
@@ -478,6 +498,34 @@ function paintNext(){
 }
 function handsOf(ms){var r=ms.some(function(n){return n>=60;}),l=ms.some(function(n){return n<60;});return r&&l?'Beide Hände':r?'Rechte Hand':'Linke Hand';}
 function chordName(ms){return ms.slice().reverse().map(shortName).join(' + ');}
+var WHITE=['C','D','E','F','G','A','B'];
+function diaName(d){return WHITE[((d%7)+7)%7]+Math.floor(d/7);}
+function positionText(hand,start,first){
+  var right=hand==='r',f=first.map(function(d){return right?d-start+1:5-(d-start);}).sort(function(a,b){return a-b;});
+  return (right?'Rechte Hand: Daumen (1) auf ':'Linke Hand: kleiner Finger (5) auf ')+diaName(start)+(right?', kleiner Finger (5) auf ':', Daumen (1) auf ')+diaName(start+4)+'. Erster Ton mit Finger '+f.join(' und ')+'.';
+}
+function handWindow(list){
+  var lo=Infinity,hi=-Infinity,low=false;
+  for(var i=0;i<list.length;i++){
+    var nl=Math.min.apply(null,[lo].concat(list[i])),nh=Math.max.apply(null,[hi].concat(list[i]));
+    if(nh-nl>4){low=nl<lo;break;}
+    lo=nl;hi=nh;
+  }
+  return low?hi-4:lo;
+}
+function startHint(){
+  if(!isRec()){
+    var o=lesson.notes[0],d=diaOf(o.midi),right=lesson.hand==='Rechte Hand';
+    return positionText(right?'r':'l',right?d-(o.finger-1):d-(5-o.finger),[d]);
+  }
+  function part(key,test){
+    var list=recSteps.map(function(st){return st.midis.filter(test).map(diaOf);}).filter(function(x){return x.length;});
+    if(!list.length||!list[0])return '';
+    var rangeOk=Math.max.apply(null,list[0])-Math.min.apply(null,list[0])<=4,first=rangeOk?list[0]:[list[0][0]];
+    return positionText(key,handWindow(list),first);
+  }
+  return [part('r',function(n){return n>=60;}),part('l',function(n){return n<60;})].filter(Boolean).join(' ');
+}
 function promptNext(){
   if(isRec()){var st=recSteps[pos];if(st)say('','Nächste '+(st.midis.length>1?'Töne: ':'Note: ')+chordName(st.midis),handsOf(st.midis));return;}
   var no=lesson.notes[pos];
@@ -493,8 +541,8 @@ function reset(){
   stopDemo();recent=[];pos=0;done=false;got=[];navigated=false;wrong=(isRec()?recSteps:lesson.notes).map(function(){return 0;});times=[];
   stepGroups().forEach(function(els){els.forEach(function(el){delete el.dataset.late;});});
   paintNotes();paintNext();
-  if(isRec()){if(!recSteps.length){done=true;say('',lesson.title,'Dieses Stück enthält keine Noten.');return;}say('',lesson.title+': Beginne mit '+chordName(recSteps[0].midis),handsOf(recSteps[0].midis)+'. Die Noten laufen mit, sobald du spielst.');return;}
-  say('',lesson.title+': Beginne mit '+shortName(lesson.notes[0].midi),lesson.tip);
+  if(isRec()){if(!recSteps.length){done=true;say('',lesson.title,'Dieses Stück enthält keine Noten.');return;}say('',lesson.title+': Beginne mit '+chordName(recSteps[0].midis),startHint());return;}
+  say('',lesson.title+': Beginne mit '+shortName(lesson.notes[0].midi),startHint()+' '+lesson.tip);
 }
 function pressChord(n){
   var st=recSteps[pos];
@@ -560,6 +608,7 @@ function noteOn(n,vel,fromScreen){
   $('played').textContent='Gespielt: '+noteName(n);
   $('vel').style.width=Math.round(vel/127*100)+'%';
   if(fromScreen){if(outConnected())sendOut([0x90,n,vel]);else sounding[n]=tone(n,vel);}
+  if(refArm&&!recState){setRef(n);return;}
   if(recState){captureOn(n,vel);if(!fromScreen)trackInput(n,-1);return;}
   if(settingsOpen){if(rec&&!fromScreen)recNote(n);return;}
   if(chatOpen)return;
@@ -773,8 +822,8 @@ document.addEventListener('mousemove',function(e){
 });
 
 /* Ansicht und Notengrösse */
-var prefs={view:'both',zoom:100,seq:{},bpm:80,meter:4,grid:2,model:'claude-sonnet-5-5'};
-try{var sp=JSON.parse(localStorage.getItem('tastenweg-prefs')||'{}');if(sp.view)prefs.view=sp.view;if(sp.zoom)prefs.zoom=Math.min(200,Math.max(25,Math.round(sp.zoom/25)*25));if(sp.seq)prefs.seq=sp.seq;if(sp.bpm)prefs.bpm=sp.bpm;if(sp.meter)prefs.meter=sp.meter;if(sp.grid)prefs.grid=sp.grid;if(sp.model)prefs.model=sp.model;}catch(e){}
+var prefs={view:'both',zoom:100,seq:{},bpm:80,meter:4,grid:2,model:'claude-sonnet-5-5',oct:true,ref:null};
+try{var sp=JSON.parse(localStorage.getItem('tastenweg-prefs')||'{}');if(sp.view)prefs.view=sp.view;if(sp.zoom)prefs.zoom=Math.min(200,Math.max(25,Math.round(sp.zoom/25)*25));if(sp.seq)prefs.seq=sp.seq;if(sp.bpm)prefs.bpm=sp.bpm;if(sp.meter)prefs.meter=sp.meter;if(sp.grid)prefs.grid=sp.grid;if(sp.model)prefs.model=sp.model;if(sp.oct===false)prefs.oct=false;if(typeof sp.ref==='number')prefs.ref=sp.ref;}catch(e){}
 function savePrefs(){try{localStorage.setItem('tastenweg-prefs',JSON.stringify(prefs));}catch(e){}}
 var viewBtns=[$('viewBoth'),$('viewNotes'),$('viewKeys')];
 function applyPrefs(){
@@ -786,7 +835,7 @@ function applyPrefs(){
   $('optZoom').value=prefs.zoom;
   $('zoomVal').textContent=prefs.zoom+' %';
   $('optBpm').value=prefs.bpm;$('bpmVal').textContent=prefs.bpm+' BPM';
-  $('optMeter').value=prefs.meter;$('optGrid').value=prefs.grid;$('optModel').value=prefs.model;
+  $('optMeter').value=prefs.meter;$('optGrid').value=prefs.grid;$('optModel').value=prefs.model;$('optOct').checked=prefs.oct;refButton();
   paintNotes();
 }
 viewBtns.forEach(function(b){b.addEventListener('click',function(){prefs.view=b.dataset.view;savePrefs();applyPrefs();});});
@@ -805,8 +854,8 @@ $('btnClose').addEventListener('click',closeSettings);
 document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(settingsOpen)closeSettings();else if(libOpen)closeLib();else if(chatOpen)closeChat();});
 
 /* Tonfolgen */
-var GLOBAL=['demo','prev','fwd','reset','record','library','full'],MENU=['next','confirm','back'];
-var ACTIONS=[{id:'demo',label:'Play und Pause'},{id:'prev',label:'Eine Note zurück'},{id:'fwd',label:'Eine Note vor'},{id:'reset',label:'Von vorn'},{id:'record',label:'Aufnahme starten und stoppen'},{id:'library',label:'Bibliothek öffnen'},{id:'full',label:'Vollbild ein/aus'},
+var GLOBAL=['demo','prev','fwd','reset','ref','record','library','full'],MENU=['next','confirm','back'];
+var ACTIONS=[{id:'demo',label:'Play und Pause'},{id:'prev',label:'Eine Note zurück'},{id:'fwd',label:'Eine Note vor'},{id:'reset',label:'Von vorn'},{id:'ref',label:'Referenzlinie'},{id:'record',label:'Aufnahme starten und stoppen'},{id:'library',label:'Bibliothek öffnen'},{id:'full',label:'Vollbild ein/aus'},
  {id:'next',label:'Weiter'},{id:'confirm',label:'Bestätigen'},{id:'back',label:'Schliessen / Zurück'}];
 var PEDALS={1064:'Rechtes Pedal',1066:'Mittelpedal',1067:'Linkes Pedal'};
 var SEQ_GAP=1500,SEQ_MAX=6,recent=[],rec=null,seqMsg={};
@@ -906,6 +955,7 @@ function runAction(id,start){
   else if(id==='prev')navigate(-1);
   else if(id==='fwd')navigate(1);
   else if(id==='reset')reset();
+  else if(id==='ref')toggleRef();
   else if(id==='library')openLib();
   else if(id==='record')toggleRecord(start);
   else toggleFull(true);
@@ -1237,7 +1287,10 @@ function buildGrand(){
   var T=transcribe(lesson.rec,prefs.grid),unit=15,left=88,barLen=T.barLen;
   recSteps=linkSteps(T);
   function x(q){return left+q*unit+Math.floor(q/barLen)*20;}
-  var w=x(T.bars*barLen)+6,h='',b1=80,b2=180,minY=30,maxY=190;
+  var w=x(T.bars*barLen)+6,b1=80,b2=180,minY=30,maxY=190,marks=[70];
+  for(var mb=1;mb<T.bars;mb++)marks.push(x(mb*barLen)-34);
+  var refUp=prefs.ref>=60,h=prefs.ref===null?'':refBand(refUp?b1:b2,refUp?30:18,w,marks);
+  if(prefs.ref!==null){var ry=(refUp?b1:b2)-(diaOf(prefs.ref)-(refUp?30:18))*5;minY=Math.min(minY,ry-8);maxY=Math.max(maxY,ry+8);}
   function staff(bottom){var o='';for(var i=0;i<5;i++)o+='<line x1="6" x2="'+(w-8)+'" y1="'+(bottom-i*10)+'" y2="'+(bottom-i*10)+'"/>';return o;}
   h+='<g class="staff">'+staff(b1)+staff(b2)+'<line x1="6" x2="6" y1="40" y2="180"/>';
   for(var b=1;b<T.bars;b++){var bx=x(b*barLen)-18;h+='<line x1="'+bx+'" x2="'+bx+'" y1="40" y2="180"/>';}
@@ -1343,7 +1396,7 @@ function restoreBackup(text){
   var good=d.recordings.filter(validRecording),before=recordings.length;
   good.forEach(putRecording);
   if(d.prefs){
-    ['view','zoom','bpm','meter','grid','model'].forEach(function(k){if(d.prefs[k]!==undefined)prefs[k]=d.prefs[k];});
+    ['view','zoom','bpm','meter','grid','model','oct','ref'].forEach(function(k){if(d.prefs[k]!==undefined)prefs[k]=d.prefs[k];});
     if(d.prefs.seq)prefs.seq=d.prefs.seq;
     savePrefs();applyPrefs();
   }
@@ -1395,7 +1448,7 @@ var ANSWER_TOOL={name:'antworten',description:'Gibt die Antwort an die Klavier-A
     }}}
   }}};
 var SYSTEM_PROMPT='Antworte immer und ausschliesslich, indem du das Werkzeug antworten aufrufst. Schreibe keinen Text ausserhalb davon.\n'+
- 'Du bist der Musikpartner in Tastenweg, einer Klavier-App für einen erwachsenen Anfänger. Er spielt auf einem Digitalpiano. Du antwortest immer auf Deutsch und verwendest deutsche Notennamen, also H statt B.\n'+
+ 'Du bist der Musikpartner in Tastenweg, einer Klavier-App für einen erwachsenen Anfänger. Er spielt auf einem Digitalpiano. Du antwortest immer auf Deutsch. Notennamen: C, D, E, F, G, A, B. B ist die weisse Taste direkt unter dem C, also das deutsche H. Die schwarze Taste darunter heisst Bb. Finger zählst du in beiden Händen vom Daumen (1) bis zum kleinen Finger (5).\n'+
  'Wenn er nach Musik fragt, liefere zwei oder drei unterschiedliche Vorschläge von 2 bis 8 Takten. Bleib in Tonart, Taktart und Stil des aktuellen Stücks, sofern er nichts anderes wünscht. Halte die Stücke für Anfänger spielbar: wenig Handwechsel, kleine Sprünge, keine Griffe über eine Oktave.\n'+
  'Töne ab dem mittleren C (60) spielt die rechte Hand, tiefere die linke. Soll eine Hand trainiert werden, liegt der Schwerpunkt in ihrem Tonbereich.\n'+
  'Eine Fortsetzung beginnt bei start 0 auf dem ersten Schlag des nächsten Takts. Alle Werte sind Vielfache von 0,25.\n'+
@@ -1564,11 +1617,30 @@ $('btnChatNew').addEventListener('click',function(e){
 $('btnChatKey').addEventListener('click',function(){closeChat();openSettings();$('optKey').focus();});
 $('chatForm').addEventListener('submit',function(e){e.preventDefault();ask($('chatInput').value);});
 [].forEach.call(document.querySelectorAll('.quick'),function(b){b.addEventListener('click',function(){ask(b.textContent);});});
-$('optNames').addEventListener('change',function(e){showNames=e.target.checked;var p=pos,d=done,w=wrong,t=times;buildScore();buildKeys();pos=p;done=d;wrong=w;times=t;paintNotes();paintNext();});
+function redraw(){buildScore();buildKeys();paintNotes();paintNext();}
+$('optNames').addEventListener('change',function(e){showNames=e.target.checked;redraw();});
+$('optOct').addEventListener('change',function(e){prefs.oct=e.target.checked;savePrefs();redraw();if(done)return;if(pos===0&&!times.length)reset();else promptNext();});
+var refArm=false;
+function refButton(){var b=$('btnRef');b.textContent=refArm?'Ton spielen …':prefs.ref===null?'Referenzlinie':'Linie '+noteName(prefs.ref)+' entfernen';}
+function paintRef(){
+  Object.keys(keys).forEach(function(k){keys[k].classList.remove('ref');});
+  if(prefs.ref!==null&&keys[prefs.ref])keys[prefs.ref].classList.add('ref');
+}
+function setRef(n){
+  refArm=false;prefs.ref=n;savePrefs();refButton();redraw();
+  say('right','Referenzlinie auf '+noteName(n),refOutside()?'Dieser Ton liegt ausserhalb dieses Notensystems. Die Linie erscheint hier nur auf der Klaviatur.':'Die Linie bleibt, bis du sie entfernst.');
+}
+function toggleRef(){
+  if(recState)return;
+  if(refArm){refArm=false;refButton();if(!done)promptNext();return;}
+  if(prefs.ref!==null){prefs.ref=null;savePrefs();refButton();redraw();if(!done)promptNext();return;}
+  refArm=true;refButton();say('','Spiele den Ton für die Referenzlinie','Der nächste Ton legt sie fest. Er zählt nicht als Fehler.');
+}
+$('btnRef').addEventListener('click',toggleRef);
 $('optKeys').addEventListener('change',function(e){showKeys=e.target.checked;paintNext();});
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&(midiOut||bleChar))keepAwake();});
 
-window.Tastenweg={parseBleMidi:parseBleMidi,scoreRun:scoreRun,transcribe:transcribe,toMidi:toMidi,leadNotes:leadNotes,handleMidi:handleMidi,lessons:LESSONS,state:function(){return {pos:pos,wrong:wrong.slice(),demo:demoTimers.length>0,seq:prefs.seq,zoom:prefs.zoom,libOpen:libOpen,query:query.slice(),selId:selId,piece:lesson.title,recState:recState,recordings:recordings,chat:chatDoc&&chatDoc.log,chats:Object.keys(chats),key:!!apiKey,steps:recSteps.length,done:done};},restore:restoreBackup,backup:backupData};
+window.Tastenweg={handWindow:handWindow,parseBleMidi:parseBleMidi,scoreRun:scoreRun,transcribe:transcribe,toMidi:toMidi,leadNotes:leadNotes,handleMidi:handleMidi,lessons:LESSONS,state:function(){return {pos:pos,wrong:wrong.slice(),demo:demoTimers.length>0,seq:prefs.seq,zoom:prefs.zoom,libOpen:libOpen,query:query.slice(),selId:selId,piece:lesson.title,recState:recState,recordings:recordings,chat:chatDoc&&chatDoc.log,chats:Object.keys(chats),key:!!apiKey,steps:recSteps.length,done:done};},restore:restoreBackup,backup:backupData};
 load(LESSONS[0]);
 applyPrefs();
 openDb();
