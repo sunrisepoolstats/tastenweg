@@ -37,13 +37,35 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px}
 .app{padding-top:var(--navh,64px)}
 html.fs .app{padding-top:0}
-.tabs{display:flex;gap:2px;flex-wrap:wrap}
-.tabs button{border:0;background:none;border-radius:0;padding:0 12px;font-weight:700;color:var(--muted);box-shadow:inset 0 -3px 0 transparent}
-.tabs button[aria-current="page"]{color:var(--ink);box-shadow:inset 0 -3px 0 var(--brass)}
+.topbar{display:grid;gap:6px}
+.topbar header{flex-wrap:nowrap}
+.topbar{grid-template-columns:minmax(0,1fr)}
+.topbar>*{min-width:0}
+.topbar .pill{flex:1 1 auto;display:block;line-height:32px}
+.topbar .pill::before{display:inline-block;vertical-align:-1px;margin-right:8px}
+.topbar .conn{flex:none;flex-wrap:nowrap}
+.navrow{display:flex;align-items:center;gap:8px;max-width:980px;margin:0 auto;width:100%;min-width:0}
+.tabs{display:flex;gap:6px;flex:1 1 auto;min-width:0}
+.tabs button{flex:1 1 0;min-width:0;padding:0 8px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs button[aria-current="page"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.rec-btn{flex:none;width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;display:grid;place-items:center;border:2px solid var(--bad);background:var(--sheet)}
+.rec-btn i{display:block;width:16px;height:16px;border-radius:50%;background:var(--bad);transition:border-radius .15s}
+.rec-btn.recording{background:var(--bad)}
+.rec-btn.recording i{background:var(--sheet);border-radius:3px;width:14px;height:14px}
+.full-btn{display:inline-flex;align-items:center;gap:6px;font-weight:700;border-color:var(--ink)}
+.full-btn[aria-pressed="true"]{border-color:var(--brass);color:var(--brass)}
+.rec-badge{position:fixed;z-index:36;top:calc(10px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));min-height:36px;padding:0 12px;border-radius:99px;border:0;background:var(--bad);color:#fff;font-weight:700;letter-spacing:.06em;display:inline-flex;align-items:center;gap:6px}
+.rec-badge::before{content:"";width:9px;height:9px;border-radius:50%;background:#fff}
+.grip{position:fixed;z-index:34;left:50%;width:64px;height:26px;min-height:26px;margin-left:-32px;padding:0;border-radius:99px;border:1px solid var(--line);background:color-mix(in srgb,var(--sheet) 80%,transparent);color:var(--ink);display:none;place-items:center;transition:opacity .4s}
+.grip svg{display:block}
+.grip.top{top:calc(18px + env(safe-area-inset-top,0px))}
+.grip.bottom{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+html.fs .grip{display:grid}
+.grip.faint{opacity:.2}
+html.fs .grip[hidden]{display:none}
 .icon-btn{width:44px;padding:0;display:inline-grid;place-items:center}
 .icon-btn[aria-pressed="true"]{border-color:var(--brass);color:var(--brass)}
-@media (max-width:900px){.topbar .pill{font-size:0;gap:0;padding:0 10px;min-height:32px}}
-@media (max-width:420px){.tabs button{padding:0 8px}}
+@media (max-width:420px){.tabs{gap:4px}.tabs button{padding:0 2px;font-size:.8125rem}.navrow{gap:6px}.full-btn span{display:none}}
 .piece-bar{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;min-width:0}
 .piece-bar b{font:700 1.15rem/1.2 var(--display);overflow-wrap:anywhere}
 .piece-bar small{color:var(--muted);font-size:.8125rem}
@@ -64,9 +86,9 @@ button,select{font:inherit;color:inherit}
 button{min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:6px;background:var(--sheet);cursor:pointer}
 button:focus-visible,.key:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
 button.primary{background:var(--brass);color:var(--on-brass);border-color:var(--brass);font-weight:700}
-.pill{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 10px;font-size:.875rem;border-radius:99px;border:1px solid var(--line)}
-.pill::before{content:"";width:9px;height:9px;border-radius:50%;border:2px solid var(--muted)}
-.pill.on{border-color:var(--good);color:var(--good)}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 4px;font-size:.9375rem;font-weight:700;color:var(--muted);min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pill::before{content:"";width:10px;height:10px;border-radius:3px;border:2px solid var(--muted);flex:none}
+.pill.on{color:var(--good)}
 .pill.on::before{background:var(--good);border-color:var(--good)}
 .hint{margin:0;padding:10px 12px;border-left:3px solid var(--warn);background:var(--sheet);font-size:.9375rem}
 .topbar,.footbar{display:grid;gap:12px;min-width:0}
@@ -129,7 +151,6 @@ html[data-view="keys"] .kb{height:clamp(170px,46vh,340px)}
 .key.mid::after{content:"";position:absolute;left:50%;bottom:26px;width:7px;height:7px;margin-left:-3.5px;border-radius:50%;background:var(--brass)}
 .kb.wide .key{font-size:.625rem;white-space:nowrap}
 .rl{font:700 calc(8px*var(--l,1)) var(--body);fill:var(--ref-ink)!important}
-html.show-seq button[data-seq]::after{content:attr(data-seq);display:block;font:400 .6875rem/1.15 var(--body);opacity:.75;margin-top:1px;white-space:nowrap}
 .key.next{background:var(--key-next)}
 .key.blk.next{background:var(--brass)}
 .key.down{background:var(--brass);color:var(--on-brass)}
@@ -152,7 +173,7 @@ html.show-seq button[data-seq]::after{content:attr(data-seq);display:block;font:
 @media (max-width:460px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-height:480px) and (orientation:landscape){
   .piece-bar{display:none}
-  .tabs button{padding:0 9px}
+  .topbar{gap:4px}
   body{padding-block:6px 12px}.app{gap:8px;max-width:none}h1{font-size:1.2rem}
   button{min-height:36px}.pill{min-height:28px}
   .score{--sh:120px}.kb{height:clamp(96px,30vh,150px)}
@@ -206,10 +227,16 @@ button.recording{background:var(--bad);border-color:var(--bad);color:var(--sheet
 .home-hero h3{margin:0 0 4px}
 .panel .home-status{font:700 1.25rem/1.3 var(--display);color:var(--ink);margin:0}
 .home-row{display:flex;flex-wrap:wrap;gap:8px}
-.home-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.home-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.box{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0}
+.box h3{margin:0}
+.stack-form{display:grid;gap:8px}
+.stack-form textarea{min-width:0;min-height:72px;padding:8px 10px;font:inherit;color:inherit;border:1px solid var(--line);border-radius:6px;background:var(--paper);resize:vertical}
+.stack-form button{justify-self:start;padding:0 24px}
+.box .item{background:var(--paper)}
 .home-list{display:grid;gap:6px;align-content:start}
 #homeRecent .item{text-align:left}
-@media (max-width:620px){.home-cols{grid-template-columns:minmax(0,1fr)}}
+
 .head-acts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
 .merge-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:var(--brass-soft);border-radius:6px}
 .merge-bar button{min-height:36px}
@@ -255,19 +282,22 @@ html.fs .stats dd{font-size:1.125rem}
 <div class="app">
   <div class="topbar" id="topbar">
   <header>
+    <span class="pill" id="status" role="status" title="Piano nicht verbunden">Piano nicht verbunden</span>
+    <div class="conn">
+      <button class="primary" id="btnBle" type="button">Verbinden</button>
+      <button class="full-btn" id="btnFull" type="button" aria-pressed="false" title="Vollbild"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span id="fullLabel">Vollbild</span></button>
+      <button class="icon-btn" id="btnSettings" type="button" aria-label="Einstellungen" title="Einstellungen"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
+    </div>
+  </header>
+  <div class="navrow">
     <nav class="tabs" aria-label="Bereiche">
       <button id="btnHome" type="button" data-tab="home">Home</button>
       <button id="tabPractice" type="button" data-tab="practice">Üben</button>
       <button id="btnLib" type="button" data-tab="lib">Bibliothek</button>
       <button id="tabProjects" type="button" data-tab="projects">Projekte</button>
     </nav>
-    <div class="conn">
-      <span class="pill" id="status" role="status" title="Piano nicht verbunden">Piano nicht verbunden</span>
-      <button class="primary" id="btnBle" type="button">Verbinden</button>
-      <button class="icon-btn" id="btnFull" type="button" aria-label="Vollbild" title="Vollbild" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
-      <button class="icon-btn" id="btnSettings" type="button" aria-label="Einstellungen" title="Einstellungen"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
-    </div>
-  </header>
+    <button class="rec-btn" id="btnRec" type="button" aria-label="Aufnahme starten" title="Aufnahme starten"><i></i></button>
+  </div>
   </div>
   <div class="piece-bar"><b id="pieceTitle"></b><small id="pieceSub"></small></div>
   <p class="hint" id="hint" hidden></p>
@@ -284,7 +314,6 @@ html.fs .stats dd{font-size:1.125rem}
         <button id="btnReset" type="button">Von vorn</button>
       </div>
       <div class="grp" role="group" aria-label="Werkzeuge">
-        <button id="btnRec" type="button">Aufnehmen</button>
         <button id="btnRef" type="button">Referenzlinie</button>
         <button id="btnChat" type="button">Claude fragen</button>
       </div>
@@ -305,6 +334,10 @@ html.fs .stats dd{font-size:1.125rem}
   </div>
 </div>
 
+<button class="rec-badge" id="recBadge" type="button" aria-label="Aufnahme stoppen" hidden>REC</button>
+<button class="grip top" id="gripTop" type="button" aria-label="Navigation einblenden"><svg viewBox="0 0 24 12" width="22" height="11" aria-hidden="true"><path d="M3 3l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+<button class="grip bottom" id="gripBottom" type="button" aria-label="Steuerung einblenden"><svg viewBox="0 0 24 12" width="22" height="11" aria-hidden="true"><path d="M3 9l9-6 9 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+
 <div class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" hidden>
   <div class="panel-in">
     <div class="panel-head"><h2 id="panelTitle">Einstellungen</h2><button class="primary" id="btnClose" type="button">Schliessen</button></div>
@@ -322,7 +355,6 @@ html.fs .stats dd{font-size:1.125rem}
         <label class="chk" for="optNames"><input id="optNames" type="checkbox" checked>Notennamen</label>
         <label class="chk" for="optOct"><input id="optOct" type="checkbox" checked>Oktavzahlen</label>
         <label class="chk" for="optKeys"><input id="optKeys" type="checkbox" checked>Taste zeigen</label>
-        <label class="chk" for="optSeqBtn"><input id="optSeqBtn" type="checkbox">Tastenfolgen auf den Knöpfen</label>
       </div>
     </section>
     <section>
@@ -372,26 +404,25 @@ html.fs .stats dd{font-size:1.125rem}
       <div class="stage" id="homeArt"><div class="stage-cap"><p class="home-status" id="homeStatus"></p><span class="cap-r"><small id="stageHint">Ziehen zum Drehen</small><button id="btnShow" type="button">Show</button></span></div></div>
       <div class="home-row">
         <button class="cont" id="btnHomeLast" type="button"><small>Weiterüben</small><b id="homeLast"></b><span class="lib-empty" id="homeLastSub"></span></button>
-        <button class="primary" id="btnHomeConnect" type="button">Piano verbinden</button>
-        <button id="btnHomeRec" type="button">Neue Aufnahme</button>
       </div>
     </div>
-    <section>
+    <section class="box">
       <h3>Neues Projekt mit Claude</h3>
       <p>Beschreibe, was du machen möchtest. Claude schreibt dir daraus Stücke und Übungen, die du übst und in der Bibliothek speicherst.</p>
-      <form class="chat-form" id="homeForm" style="margin-top:8px">
+      <form class="stack-form" id="homeForm">
         <textarea id="homeInput" rows="2" aria-label="Was möchtest du machen?" placeholder="Was möchtest du machen?"></textarea>
         <button class="primary" id="btnStart" type="submit">Starten</button>
       </form>
-      <div class="quicks" style="margin-top:8px">
+      <div class="quicks">
         <button class="hquick" id="hq1" type="button">Komponiere eine kurze, ruhige Melodie in C-Dur</button>
         <button class="hquick" id="hq2" type="button">Schreib mir ein Aufwärmprogramm für beide Hände</button>
         <button class="hquick" id="hq3" type="button">Trainiere mit mir die linke Hand</button>
       </div>
     </section>
     <div class="home-cols">
-      <section class="home-list"><h3>Letzte Projekte</h3><div class="home-list" id="homeProjects"></div><button class="more" id="btnAllProj" type="button">Alle Projekte ›</button></section>
-      <section class="home-list"><h3>Meine Stücke</h3><div class="home-list" id="homeRecent"></div><button class="more" id="btnAllLib" type="button">Zur Bibliothek ›</button></section>
+      <section class="box"><h3>Letzte Projekte</h3><div class="home-list" id="homeProjects"></div><button class="more" id="btnAllProj" type="button">Alle Projekte ›</button></section>
+      <section class="box"><h3>Eigene Stücke</h3><div class="home-list" id="homeRecent"></div><button class="more" id="btnAllOwn" type="button">Alle eigenen Stücke ›</button></section>
+      <section class="box"><h3>Bibliothek</h3><p class="lib-empty">Zuletzt geöffnet</p><div class="home-list" id="homeOpened"></div><button class="more" id="btnAllLib" type="button">Zur Bibliothek ›</button></section>
     </div>
   </div>
 </div>
@@ -649,7 +680,16 @@ function promptNext(){
 }
 
 /* ---------- Ablauf ---------- */
+var opened=[];try{opened=JSON.parse(localStorage.getItem('tastenweg-opened')||'[]')||[];}catch(e){opened=[];}
+var booted=false;
+function noteOpened(l){
+  if(!booted)return;
+  var key=l.kind==='rec'?'r'+l.rec.id:'l'+l.id;
+  opened=[key].concat(opened.filter(function(k){return k!==key;})).slice(0,12);
+  try{localStorage.setItem('tastenweg-opened',JSON.stringify(opened));}catch(e){}
+}
 function load(l){
+  noteOpened(l);
   if(recState)stopRecord();
   stopDemo();lesson=l;playX=0;buildScore();buildKeys();reset();paintPieceBar();
 }
@@ -789,7 +829,7 @@ function sendOut(msg){
     bleQueue=bleQueue.then(function(){return (bleChar.writeValueWithoutResponse||bleChar.writeValue).call(bleChar,pkt);}).catch(function(){});
   }
 }
-function setStatus(text,on){statusEl.textContent=text;statusEl.title=text;statusEl.classList.toggle('on',!!on);}
+function setStatus(text,on){text=on?text+' verbunden':text;statusEl.textContent=text;statusEl.title=text;statusEl.classList.toggle('on',!!on);}
 function keepAwake(){if(navigator.wakeLock){navigator.wakeLock.request('screen').catch(function(){});}}
 function connectBle(){
   hint('');
@@ -803,7 +843,7 @@ function connectBle(){
         c.addEventListener('characteristicvaluechanged',function(e){
           parseBleMidi(new Uint8Array(e.target.value.buffer,e.target.value.byteOffset,e.target.value.byteLength)).forEach(handleMidi);
         });
-        setStatus(dev.name||'Piano verbunden',true);keepAwake();
+        setStatus(dev.name||'Piano',true);keepAwake();
       });
     });
   }).catch(function(e){
@@ -886,7 +926,7 @@ $('btnReset').addEventListener('click',reset);
 $('btnDemo').addEventListener('click',demo);
 holdButton($('btnPrev'),function(){navigate(-1);});
 holdButton($('btnFwd'),function(){navigate(1);});
-$('btnRec').addEventListener('click',function(){toggleRecord();});
+$('btnRec').addEventListener('click',function(){if(recState){toggleRecord();return;}if(homeOpen||libOpen||projOpen)showPractice();toggleRecord();});
 $('btnLib').addEventListener('click',openLib);
 $('btnMergeCancel').addEventListener('click',function(){mergeFrom=null;renderLib();});
 var btnFull=$('btnFull'),rootEl=document.documentElement;
@@ -902,17 +942,27 @@ function toggleFull(fromPiano){
 btnFull.addEventListener('click',function(){toggleFull(false);});
 var bars={top:$('topbar'),foot:$('footbar')},barTimer=null;
 function isFs(){return rootEl.classList.contains('fs');}
-function hideBar(b){b.classList.remove('show');}
-function hideBars(){clearTimeout(barTimer);hideBar(bars.top);hideBar(bars.foot);}
+function hideBar(b){b.classList.remove('show');if(window.gripsReady)gripsUi();}
+function hideBars(){clearTimeout(barTimer);bars.top.classList.remove('show');bars.foot.classList.remove('show');if(window.gripsReady)gripsUi();}
 function armBars(){clearTimeout(barTimer);barTimer=setTimeout(hideBars,3500);}
-function showBar(b){b.classList.add('show');armBars();}
+function showBar(b){b.classList.add('show');armBars();gripsUi();}
+var gripTimer=null;
+function gripsUi(){
+  var fs=isFs(),view=homeOpen||libOpen||projOpen;
+  $('gripTop').hidden=!fs||shown(bars.top);
+  $('gripBottom').hidden=!fs||view||shown(bars.foot);
+  [$('gripTop'),$('gripBottom')].forEach(function(g){g.classList.remove('faint');});
+  clearTimeout(gripTimer);gripTimer=setTimeout(function(){[$('gripTop'),$('gripBottom')].forEach(function(g){g.classList.add('faint');});},3500);
+}
+$('gripTop').addEventListener('click',function(){showBar(bars.top);});
+$('gripBottom').addEventListener('click',function(){showBar(bars.foot);});
 function shown(b){return b.classList.contains('show');}
 document.addEventListener('fullscreenchange',function(){
   var on=document.fullscreenElement===rootEl;
   stage.show(document.fullscreenElement===$('homeArt'));
   $('btnShow').textContent=document.fullscreenElement===$('homeArt')?'Show beenden':'Show';
   rootEl.classList.toggle('fs',on);
-  btnFull.setAttribute('aria-pressed',on?'true':'false');btnFull.title=on?'Vollbild beenden':'Vollbild';btnFull.setAttribute('aria-label',btnFull.title);
+  btnFull.setAttribute('aria-pressed',on?'true':'false');btnFull.title=on?'Vollbild beenden':'Vollbild';$('fullLabel').textContent=on?'Beenden':'Vollbild';recUi();gripsUi();
   hideBars();
   if(on){showBar(bars.top);showBar(bars.foot);}
   paintNotes();
@@ -926,6 +976,7 @@ var swipe=null;
 document.addEventListener('touchstart',function(e){
   if(!isFs()||settingsOpen||chatOpen||e.touches.length!==1){swipe=null;return;}
   var t=e.touches[0];
+  if(t.clientY<40||t.clientY>window.innerHeight-40){swipe=null;return;}
   swipe=e.target.closest&&e.target.closest('input')?null:{x:t.clientX,y:t.clientY,at:Date.now()};
 },{passive:true});
 document.addEventListener('touchcancel',function(){swipe=null;},{passive:true});
@@ -960,7 +1011,7 @@ function applyPrefs(){
   $('zoomVal').textContent=prefs.zoom+' %';
   $('optBpm').value=prefs.bpm;$('bpmVal').textContent=prefs.bpm+' BPM';
   $('optMeter').value=prefs.meter;$('optGrid').value=prefs.grid;$('optModel').value=prefs.model;$('optOct').checked=prefs.oct;refButton();
-  $('optLbl').value=prefs.lbl;$('lblVal').textContent=prefs.lbl+' %';$('optSeqBtn').checked=prefs.seqBtn;rootEl.classList.toggle('show-seq',prefs.seqBtn);seqLabels();
+  $('optLbl').value=prefs.lbl;$('lblVal').textContent=prefs.lbl+' %';
   paintNotes();
 }
 viewBtns.forEach(function(b){b.addEventListener('click',function(){prefs.view=b.dataset.view;savePrefs();applyPrefs();});});
@@ -1005,7 +1056,6 @@ function checkSeq(id,s){
 function stepName(t){return t>=1000?PEDALS[t]:noteName(t);}
 function seqText(s){return s.map(stepName).join(' – ');}
 function renderSeqs(){
-  seqLabels();
   var box=$('seqs');box.textContent='';
   function head(text){var h=document.createElement('p');h.className='seq-group';h.textContent=text;box.appendChild(h);}
   function row(a){
@@ -1217,7 +1267,9 @@ function openDb(){
     r.onsuccess=function(){
       db=r.result;
       var q=db.transaction('recordings').objectStore('recordings').getAll();
-      q.onsuccess=function(){recordings=q.result;sortRecs();if(libOpen)renderLib();if(homeOpen)renderHome();};
+      q.onsuccess=function(){recordings=q.result;sortRecs();
+        if(startKey&&startKey[0]==='r'&&!isRec()){var sr=recordings.filter(function(x){return 'r'+x.id===startKey;})[0];if(sr){booted=false;openRec(sr);booted=true;}}
+        if(libOpen)renderLib();if(homeOpen)renderHome();};
       var c=db.transaction('chats').objectStore('chats').getAll();
       c.onsuccess=function(){c.result.forEach(function(d){chats[d.key]=d;});if(homeOpen)renderHome();};
     };
@@ -1278,15 +1330,21 @@ function beatShown(i){
   if(i<0)say('rec','Einzählen: '+beat,'Die Aufnahme beginnt nach diesem Takt.');
   else{recState='on';say('rec','Aufnahme läuft · Takt '+(Math.floor(i/p)+1),'Schlag '+beat+' von '+p);}
 }
+function recUi(){
+  var on=!!recState,b=$('btnRec');
+  b.classList.toggle('recording',on);b.title=on?'Aufnahme stoppen':'Aufnahme starten';b.setAttribute('aria-label',b.title);
+  $('recBadge').hidden=!(on&&isFs());
+}
+$('recBadge').addEventListener('click',function(){if(recState)stopRecord();});
 function toggleRecord(cut){if(recState)stopRecord(cut);else startRecord();}
 function startRecord(){
-  if(libOpen)return;
+  if(libOpen||homeOpen||projOpen)showPractice();
   stopDemo();recent=[];
   var beat=60000/prefs.bpm;
   recData={bpm:prefs.bpm,meter:prefs.meter,t0:performance.now()+beat*prefs.meter+120,notes:[],pedal:[],open:{}};
   recState='count';
   sayEl.setAttribute('aria-live','off');
-  var b=$('btnRec');b.textContent='Stopp';b.classList.add('recording');
+  recUi();
   say('rec','Bereit','Das Einzählen beginnt.');
   startClick();
 }
@@ -1302,7 +1360,7 @@ function stopRecord(cut){
   var d=recData,end=cut?cut-5:performance.now();
   clearInterval(clickTimer);recState=null;recData=null;
   sayEl.setAttribute('aria-live','polite');
-  var b=$('btnRec');b.textContent='Aufnehmen';b.classList.remove('recording');
+  recUi();
   var notes=d.notes.filter(function(o){return o.at<end;});
   notes.forEach(function(o){if(!o.d)o.d=Math.round(end-o.at);});
   if(!notes.length){reset();say('wrong','Keine Töne aufgenommen','Die Aufnahme wurde verworfen.');return;}
@@ -1528,7 +1586,7 @@ function restoreBackup(text){
   var good=d.recordings.filter(validRecording),before=recordings.length;
   good.forEach(putRecording);
   if(d.prefs){
-    ['view','zoom','bpm','meter','grid','model','oct','ref','lbl','seqBtn','theme'].forEach(function(k){if(d.prefs[k]!==undefined)prefs[k]=d.prefs[k];});
+    ['view','zoom','bpm','meter','grid','model','oct','ref','lbl','theme'].forEach(function(k){if(d.prefs[k]!==undefined)prefs[k]=d.prefs[k];});
     if(d.prefs.seq)prefs.seq=d.prefs.seq;
     savePrefs();applyPrefs();
   }
@@ -1771,15 +1829,6 @@ function redraw(){buildScore();buildKeys();paintNotes();paintNext();}
 $('optNames').addEventListener('change',function(e){showNames=e.target.checked;redraw();});
 $('optTheme').addEventListener('change',function(e){prefs.theme=e.target.value;savePrefs();applyPrefs();});
 $('optLbl').addEventListener('input',function(e){prefs.lbl=+e.target.value;savePrefs();applyPrefs();redraw();});
-$('optSeqBtn').addEventListener('change',function(e){prefs.seqBtn=e.target.checked;savePrefs();applyPrefs();});
-var SEQ_BTNS={home:'btnHome',demo:'btnDemo',prev:'btnPrev',fwd:'btnFwd',reset:'btnReset',ref:'btnRef',record:'btnRec',library:'btnLib',full:'btnFull'};
-function seqLabels(){
-  Object.keys(SEQ_BTNS).forEach(function(id){
-    var b=$(SEQ_BTNS[id]),q=prefs.seq[id];
-    if(q&&q.length)b.setAttribute('data-seq',q.map(function(t){return t>=1000?{1064:'Ped. R',1066:'Ped. M',1067:'Ped. L'}[t]:noteName(t);}).join('–'));
-    else b.removeAttribute('data-seq');
-  });
-}
 $('optOct').addEventListener('change',function(e){prefs.oct=e.target.checked;savePrefs();redraw();if(done)return;if(pos===0&&!times.length)reset();else promptNext();});
 var refArm=false;
 function refButton(){var b=$('btnRef');b.textContent=refArm?'Ton spielen …':prefs.ref===null?'Referenzlinie':'Linie '+noteName(prefs.ref)+' entfernen';}
@@ -1918,12 +1967,24 @@ function renderHome(){
   if(!stageTried){stageTried=true;if(!stage.init(art)){$('stageHint').hidden=true;}}
   if(stage.available())stage.start();
   else{var old=art.querySelector('svg');if(old)old.remove();art.insertAdjacentHTML('afterbegin',pianoArt());}
-  $('homeStatus').textContent=on?statusEl.textContent+' ist verbunden':'Piano nicht verbunden';
-  $('btnHomeConnect').hidden=on;
+  $('homeStatus').textContent=statusEl.textContent;
   $('homeLast').textContent=lesson.title;$('homeLastSub').textContent=pieceSub();
   var box=$('homeProjects'),list=allDocs().slice(0,3);box.textContent='';
   if(!list.length){var p=document.createElement('p');p.className='lib-empty';p.textContent='Noch keine Projekte.';box.appendChild(p);}
   list.forEach(function(d){box.appendChild(projItem(d,'home',false));});
+  var ob=$('homeOpened');ob.textContent='';
+  var shownList=opened.map(function(k){
+    if(k[0]==='l'){var L=LESSONS.filter(function(x){return 'l'+x.id===k;})[0];return L&&{title:L.title,badge:'Übungsstück',ai:false,open:function(){closeHome();load(L);}};}
+    var r=recordings.filter(function(x){return 'r'+x.id===k;})[0];return r&&{title:r.title,badge:r.source==='claude'?'Von Claude':'Aufnahme',ai:r.source==='claude',open:function(){closeHome();openRec(r);}};
+  }).filter(Boolean).slice(0,3);
+  shownList.forEach(function(x){
+    var it=document.createElement('div');it.className='item';
+    var b=document.createElement('button');b.type='button';b.className='open';
+    var t=document.createElement('b');t.textContent=x.title;var sm=document.createElement('small');
+    var bd=document.createElement('span');bd.className='badge'+(x.ai?' ai':'');bd.textContent=x.badge;sm.appendChild(bd);
+    b.appendChild(t);b.appendChild(sm);b.addEventListener('click',x.open);it.appendChild(b);ob.appendChild(it);
+  });
+  if(!shownList.length){var oq=document.createElement('p');oq.className='lib-empty';oq.textContent='Noch nichts geöffnet.';ob.appendChild(oq);}
   var rb=$('homeRecent');rb.textContent='';
   recordings.slice(0,3).forEach(function(r){
     var it=document.createElement('div');it.className='item';
@@ -1952,10 +2013,10 @@ function startProject(q,from){
   $('homeInput').value='';
 }
 $('btnHome').addEventListener('click',openHome);
-$('btnHomeConnect').addEventListener('click',connectBle);
 $('btnHomeLast').addEventListener('click',showPractice);
 $('btnAllProj').addEventListener('click',openProjects);
 $('btnAllLib').addEventListener('click',openLib);
+$('btnAllOwn').addEventListener('click',openLib);
 var btnShow=$('btnShow');
 if(!$('homeArt').requestFullscreen)btnShow.hidden=true;
 btnShow.addEventListener('click',function(){
@@ -1964,12 +2025,12 @@ btnShow.addEventListener('click',function(){
   var p=art.requestFullscreen({navigationUI:'hide'});
   if(p&&p.catch)p.catch(function(){btnShow.hidden=true;});
 });
-$('btnHomeRec').addEventListener('click',function(){closeHome();startRecord();});
 $('homeForm').addEventListener('submit',function(e){e.preventDefault();startProject($('homeInput').value);});
 [].forEach.call(document.querySelectorAll('.hquick'),function(b){b.addEventListener('click',function(){startProject(b.textContent);});});
 new MutationObserver(function(){$('btnBle').hidden=statusEl.classList.contains('on');if(homeOpen)renderHome();}).observe(statusEl,{childList:true,attributes:true});
 /* ---------- Navigation ---------- */
 function updateTabs(){
+  if(window.gripsReady)gripsUi();
   var cur=homeOpen?'home':libOpen?'lib':projOpen?'projects':'practice';
   [].forEach.call(document.querySelectorAll('.tabs [data-tab]'),function(b){if(b.dataset.tab===cur)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
 }
@@ -2035,7 +2096,10 @@ $('projForm').addEventListener('submit',function(e){e.preventDefault();startProj
 
 
 window.Tastenweg={handWindow:handWindow,parseBleMidi:parseBleMidi,scoreRun:scoreRun,transcribe:transcribe,toMidi:toMidi,leadNotes:leadNotes,handleMidi:handleMidi,lessons:LESSONS,state:function(){return {pos:pos,wrong:wrong.slice(),demo:demoTimers.length>0,seq:prefs.seq,zoom:prefs.zoom,libOpen:libOpen,query:query.slice(),selId:selId,piece:lesson.title,recState:recState,recordings:recordings,chat:chatDoc&&chatDoc.log,home:homeOpen,chatTitle:chatDoc&&chatDoc.title,proj:projOpen,tab:(document.querySelector('.tabs [aria-current]')||{}).id,chats:Object.keys(chats),key:!!apiKey,steps:recSteps.length,done:done};},restore:restoreBackup,backup:backupData};
-load(LESSONS[0]);
+window.gripsReady=true;
+var startKey=opened[0];
+load(LESSONS.filter(function(x){return 'l'+x.id===startKey;})[0]||LESSONS[0]);
+booted=true;
 applyPrefs();
 syncNav();
 openDb();
