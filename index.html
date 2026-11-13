@@ -73,7 +73,7 @@ html.fs .grip[hidden]{display:none}
 .tools{column-gap:24px}
 .panel.view{top:var(--navh,64px);z-index:25;padding-top:16px}
 html.fs .panel.view{padding-top:calc(12px + env(safe-area-inset-top,0px))}
-html.fs .topbar{z-index:35}
+html.fs body .topbar{z-index:35}
 .cont{display:grid;text-align:left;min-height:60px;padding:8px 16px;border-color:var(--brass);line-height:1.25;min-width:0;max-width:100%}
 .cont small{color:var(--muted);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase}
 .cont b{font:700 1.1rem var(--display);overflow-wrap:anywhere}
@@ -964,7 +964,7 @@ document.addEventListener('fullscreenchange',function(){
   rootEl.classList.toggle('fs',on);
   btnFull.setAttribute('aria-pressed',on?'true':'false');btnFull.title=on?'Vollbild beenden':'Vollbild';$('fullLabel').textContent=on?'Beenden':'Vollbild';recUi();gripsUi();
   hideBars();
-  if(on){showBar(bars.top);showBar(bars.foot);}
+  if(on){showBar(bars.top);if(!(homeOpen||libOpen||projOpen))showBar(bars.foot);}
   paintNotes();
 });
 [bars.top,bars.foot].forEach(function(b){
